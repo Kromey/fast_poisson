@@ -1,5 +1,7 @@
 # fast_poisson
 
+[![Docs](https://docs.rs/fast_poisson/badge.svg)](https://docs.rs/fast_poisson/)
+[![Crates.io](https://img.shields.io/crates/v/fast_poisson.svg)](https://crates.io/crates/fast_poisson)
 [![CI](https://github.com/Kromey/fast_poisson/actions/workflows/rust.yml/badge.svg)](https://github.com/Kromey/fast_poisson/actions/workflows/rust.yml)
 
 This is a library for generating Poisson disk distributions using [Bridson's algorithm][Bridson].
