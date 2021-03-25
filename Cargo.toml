@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
 edition = "2018"
 description = "An implementation of Bridson's algorithm for fast Poisson disk sampling"
-license = "MIT OR Apache-2.0"
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
