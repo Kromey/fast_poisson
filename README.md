@@ -1,5 +1,7 @@
 # fast_poisson
 
+[![CI](https://github.com/Kromey/fast_poisson/actions/workflows/rust.yml/badge.svg)](https://github.com/Kromey/fast_poisson/actions/workflows/rust.yml)
+
 This is a library for generating Poisson disk distributions using [Bridson's algorithm][Bridson].
 
 Properties of Poisson disk distributions include no two points being closer than a certain radius
