@@ -8,6 +8,7 @@ repository = "https://github.com/Kromey/fast_poisson"
 license-file = "LICENSE"
 keywords = ["poisson-disk", "bridson", "distribution", "sampling"]
 categories = ["algorithms"]
+exclude = ["/.github/*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
