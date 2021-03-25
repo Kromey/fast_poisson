@@ -269,3 +269,17 @@ impl Iterator for PoissonIter {
         None
     }
 }
+
+// Hacky way to include README in doc-tests, but works until #[doc(include...)] is stabilized
+// https://github.com/rust-lang/cargo/issues/383#issuecomment-720873790
+#[cfg(doctest)]
+mod test_readme {
+  macro_rules! external_doc_test {
+    ($x:expr) => {
+        #[doc = $x]
+        extern {}
+    };
+  }
+
+  external_doc_test!(include_str!("../README.md"));
+}
