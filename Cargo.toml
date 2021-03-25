@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
 edition = "2018"
 description = "An implementation of Bridson's algorithm for fast Poisson disk sampling"
+repository = "https://github.com/Kromey/fast_poisson"
 license-file = "LICENSE"
 keywords = ["poisson-disk", "bridson", "distribution", "sampling"]
 categories = ["algorithms"]
