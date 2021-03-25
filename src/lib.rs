@@ -85,7 +85,6 @@ pub struct Poisson {
 }
 
 impl Poisson {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }
