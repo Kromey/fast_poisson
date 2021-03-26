@@ -127,7 +127,7 @@ pub struct PoissonIter {
     /// The size of each cell in the grid
     cell_size: f64,
     /// The grid stores spatially-oriented samples for fast checking of neighboring sample points
-    grid: Vec<Vec<Option<Point>>>,
+    grid: Vec<Option<Point>>,
     /// A list of valid points that we have not yet visited
     active: Vec<Point>,
     /// The current point we are visiting to generate and test surrounding points
@@ -149,7 +149,7 @@ impl PoissonIter {
             pattern: pattern.clone(),
             rng,
             cell_size,
-            grid: vec![vec![None; (pattern.height / cell_size).ceil() as usize]; (pattern.width / cell_size).ceil() as usize],
+            grid: vec![None; ((pattern.height / cell_size).ceil() * (pattern.width / cell_size).ceil()) as usize],
             active: Vec::new(),
             current_sample: None,
         };
@@ -169,16 +169,26 @@ impl PoissonIter {
         self.active.push(point);
 
         // Now stash this point in our grid
-        let (x, y) = self.sample_to_grid(point);
-        self.grid[x][y] = Some(point);
+        let idx = self.point_to_idx(point);
+        self.grid[idx] = Some(point);
     }
 
-    /// Convert a sample point into grid cell coordinates
-    fn sample_to_grid(&self, point: Point) -> (usize, usize) {
-        (
-            (point[0] / self.cell_size) as usize,
-            (point[1] / self.cell_size) as usize,
-        )
+    /// Convert a point into grid cell coordinates
+    fn point_to_cell(&self, point: Point) -> (isize, isize) {
+        let x = point[0] / self.cell_size;
+        let y = point[1] / self.cell_size;
+
+        (x as isize, y as isize)
+    }
+
+    /// Convert a cell into a grid vector index
+    fn cell_to_idx(&self, cell: (isize, isize)) -> usize {
+        (cell.0 as f64 * self.pattern.width / self.cell_size) as usize + cell.1 as usize
+    }
+
+    /// Convenience function to go straight from point to grid vector index
+    fn point_to_idx(&self, point: Point) -> usize {
+        self.cell_to_idx(self.point_to_cell(point))
     }
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
@@ -203,26 +213,27 @@ impl PoissonIter {
     
     /// Returns true if there is at least one other sample point within `radius` of this point
     fn in_neighborhood(&self, point: Point) -> bool {
-        let grid_point = {
-            let p = self.sample_to_grid(point);
-            (p.0 as isize, p.1 as isize)
-        };
+        let cell = self.point_to_cell(point);
+        let grid_width = (self.pattern.width / self.cell_size) as isize;
+        let grid_height = (self.pattern.height / self.cell_size) as isize;
+
         // We'll compare to distance squared, so we can skip the square root operation for better performance
         let r_squared = self.pattern.radius.powi(2);
     
-        for x in grid_point.0 - 2..=grid_point.0 + 2 {
+        for x in cell.0 - 2..=cell.0 + 2 {
             // Make sure we're still in our grid
-            if x < 0 || x >= self.grid.len() as isize {
+            if x < 0 || x >= grid_width {
                 continue;
             }
-            for y in grid_point.1 - 2..=grid_point.1 + 2 {
+            for y in cell.1 - 2..=cell.1 + 2 {
                 // Make sure we're still in our grid
-                if y < 0 || y >= self.grid[0].len() as isize {
+                if y < 0 || y >= grid_height {
                     continue;
                 }
     
                 // If there's a sample here, check that it's not too close to us
-                if let Some(point2) = self.grid[x as usize][y as usize] {
+                let idx = self.cell_to_idx((x, y));
+                if let Some(point2) = self.grid[idx] {
                     if (point[0] - point2[0]).powi(2) + (point[1] - point2[1]).powi(2) < r_squared {
                         return true;
                     }

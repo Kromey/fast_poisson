@@ -48,11 +48,11 @@ fn sample_to_grid() {
     let iter = PoissonIter::new(&Poisson::new());
 
     for &point in &[[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]] {
-        let (x, y) = iter.sample_to_grid(point);
+        let idx = iter.point_to_idx(point);
     
         // Trying to access this will panic if it's out of bound in any way
         // TODO: Should do more robust testing of the results
-        let _ = iter.grid[x][y];
+        let _ = iter.grid[idx];
     }
 }
 
@@ -65,8 +65,8 @@ fn adding_points() {
 
     assert!(iter.active.contains(&point));
 
-    let (x, y) = iter.sample_to_grid(point);
-    assert_eq!(iter.grid[x][y], Some(point));
+    let idx = iter.point_to_idx(point);
+    assert_eq!(iter.grid[idx], Some(point));
 }
 
 #[test]
@@ -108,7 +108,9 @@ fn in_rectangle() {
 
 #[test]
 fn empty_grid_has_no_neighbors() {
-    let iter = PoissonIter::new(&Poisson::new());
+    let mut iter = PoissonIter::new(&Poisson::new());
+    // Flush the grid
+    iter.grid = vec![None; iter.grid.len()];
 
     assert!(!iter.in_neighborhood([0.1, 0.1]));
     assert!(!iter.in_neighborhood([0.2, 0.2]));
@@ -118,6 +120,10 @@ fn empty_grid_has_no_neighbors() {
 #[test]
 fn distant_point_has_no_neighbors() {
     let mut iter = PoissonIter::new(&Poisson::new());
+    // Flush the grid
+    iter.grid = vec![None; iter.grid.len()];
+
+    // Add test point
     iter.add_point([0.9, 0.9]);
 
     assert!(!iter.in_neighborhood([0.1, 0.1]));
@@ -128,6 +134,10 @@ fn distant_point_has_no_neighbors() {
 #[test]
 fn point_has_neighbors() {
     let mut iter = PoissonIter::new(&Poisson::new());
+    // Flush the grid
+    iter.grid = vec![None; iter.grid.len()];
+
+    // Add test point
     iter.add_point([0.2, 0.2]);
 
     assert!(iter.in_neighborhood([0.2, 0.2])); // Same point is a neighbor
@@ -137,7 +147,12 @@ fn point_has_neighbors() {
 #[test]
 fn out_of_bounds_point_is_not_neighbor() {
     let mut iter = PoissonIter::new(&Poisson::new());
+    // Flush the grid
+    iter.grid = vec![None; iter.grid.len()];
+
+    // Enlarge radius
     iter.pattern.radius = 0.5;
+    // Add test point near perimeter
     iter.add_point([0.9, 0.9]);
 
     assert!(!iter.in_neighborhood([1.1, 1.1])); // Out of bounds by definition has no neighbors
