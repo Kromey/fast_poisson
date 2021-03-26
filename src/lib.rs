@@ -10,16 +10,15 @@
 //! ```
 //! use fast_poisson::Poisson;
 //! 
-//! let points = Poisson::new().iter();
+//! let points = Poisson::<2>::new().iter();
 //! ```
 //! 
 //! To fill a box, specify the width and height:
 //! ```
 //! use fast_poisson::Poisson;
 //! 
-//! let poisson = Poisson {
-//!     width: 100.0,
-//!     height: 100.0,
+//! let poisson = Poisson::<2> {
+//!     dimensions: [100.0, 100.0],
 //!     radius: 5.0,
 //!     ..Default::default()
 //! };
@@ -40,7 +39,7 @@
 //! }
 //! 
 //! // Map the Poisson disk points to our `Point` struct
-//! let points = Poisson::new().iter().map(|[x, y]| Point { x, y });
+//! let points = Poisson::<2>::new().iter().map(|[x, y]| Point { x, y });
 //! ```
 //! 
 //! Additionally, the iterator is lazily evaluated, meaning that points are only generated as
@@ -49,14 +48,14 @@
 //! use fast_poisson::Poisson;
 //! 
 //! // Only 5 points from the distribution are actually generated!
-//! let points = Poisson::new().iter().take(5);
+//! let points = Poisson::<2>::new().iter().take(5);
 //! ```
 //! 
 //! You can even use [`Poisson`] directly within a `for` loop!
 //! ```
 //! use fast_poisson::Poisson;
 //! 
-//! for point in Poisson::new() {
+//! for point in Poisson::<2>::new() {
 //!     println!("X: {}; Y: {}", point[0], point[1]);
 //! }
 //! ```
@@ -71,11 +70,9 @@ use rand_xoshiro::Xoshiro256StarStar;
 
 /// Builder for a Poisson disk distribution
 #[derive(Debug, Clone)]
-pub struct Poisson {
-    /// Wdith of the box
-    pub width: f64,
-    /// Height of the box
-    pub height: f64,
+pub struct Poisson<const N: usize> {
+    /// Dimensions of the box
+    pub dimensions: [f64; N],
     /// Radius around each point that must remain empty
     pub radius: f64,
     /// Seed to use for the internal RNG
@@ -84,21 +81,20 @@ pub struct Poisson {
     pub num_samples: u32,
 }
 
-impl Poisson {
+impl<const N: usize> Poisson<N> {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn iter(&self) -> PoissonIter {
+    pub fn iter(&self) -> PoissonIter<N> {
         PoissonIter::new(self)
     }
 }
 
-impl Default for Poisson {
+impl<const N: usize> Default for Poisson<N> {
     fn default() -> Self {
-        Poisson {
-            width: 1.0,
-            height: 1.0,
+        Poisson::<N> {
+            dimensions: [1.0; N],
             radius: 0.1,
             seed: None,
             num_samples: 30,
@@ -106,9 +102,9 @@ impl Default for Poisson {
     }
 }
 
-impl IntoIterator for Poisson {
-    type Item = Point;
-    type IntoIter = PoissonIter;
+impl<const N: usize> IntoIterator for Poisson<N> {
+    type Item = Point<N>;
+    type IntoIter = PoissonIter<N>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -116,26 +112,26 @@ impl IntoIterator for Poisson {
 }
 
 /// A Point is simply an array of f64 values
-type Point = [f64; 2];
+type Point<const N: usize> = [f64; N];
 
 /// An iterator over the points in the Poisson disk distribution
-pub struct PoissonIter {
+pub struct PoissonIter<const N: usize> {
     /// The Pattern from which this iterator was built
-    pattern: Poisson,
+    pattern: Poisson<N>,
     /// The RNG
     rng: Xoshiro256StarStar,
     /// The size of each cell in the grid
     cell_size: f64,
     /// The grid stores spatially-oriented samples for fast checking of neighboring sample points
-    grid: Vec<Option<Point>>,
+    grid: Vec<Option<Point<N>>>,
     /// A list of valid points that we have not yet visited
-    active: Vec<Point>,
+    active: Vec<Point<N>>,
     /// The current point we are visiting to generate and test surrounding points
-    current_sample: Option<(Point, u32)>,
+    current_sample: Option<(Point<N>, u32)>,
 }
 
-impl PoissonIter {
-    pub fn new(pattern: &Poisson) -> Self {
+impl<const N: usize> PoissonIter<N> {
+    pub fn new(pattern: &Poisson<N>) -> Self {
         // We maintain a grid of our samples for faster radius checking
         let cell_size = pattern.radius / (2_f64).sqrt();
 
@@ -149,23 +145,23 @@ impl PoissonIter {
             pattern: pattern.clone(),
             rng,
             cell_size,
-            grid: vec![None; ((pattern.height / cell_size).ceil() * (pattern.width / cell_size).ceil()) as usize],
+            grid: vec![None; ((pattern.dimensions[0] / cell_size).ceil() * (pattern.dimensions[1] / cell_size).ceil()) as usize],
             active: Vec::new(),
             current_sample: None,
         };
     
         // We have to generate an initial point, just to ensure we've got *something* in the active list
-        let mut first_point = Point::default();
-        iter.rng.fill(&mut first_point);
-        first_point[0] *= pattern.width;
-        first_point[1] *= pattern.height;
+        let mut first_point = [0.0; N];
+        for i in 0..N {
+            first_point[i] = iter.rng.gen::<f64>() * pattern.dimensions[i];
+        }
         iter.add_point(first_point);
 
         iter
     }
 
     /// Add a point to our pattern
-    fn add_point(&mut self, point: Point) {
+    fn add_point(&mut self, point: Point<N>) {
         self.active.push(point);
 
         // Now stash this point in our grid
@@ -174,7 +170,7 @@ impl PoissonIter {
     }
 
     /// Convert a point into grid cell coordinates
-    fn point_to_cell(&self, point: Point) -> (isize, isize) {
+    fn point_to_cell(&self, point: Point<N>) -> (isize, isize) {
         let x = point[0] / self.cell_size;
         let y = point[1] / self.cell_size;
 
@@ -183,39 +179,40 @@ impl PoissonIter {
 
     /// Convert a cell into a grid vector index
     fn cell_to_idx(&self, cell: (isize, isize)) -> usize {
-        (cell.0 as f64 * self.pattern.width / self.cell_size) as usize + cell.1 as usize
+        (cell.0 as f64 * self.pattern.dimensions[1] / self.cell_size) as usize + cell.1 as usize
     }
 
     /// Convenience function to go straight from point to grid vector index
-    fn point_to_idx(&self, point: Point) -> usize {
+    fn point_to_idx(&self, point: Point<N>) -> usize {
         self.cell_to_idx(self.point_to_cell(point))
     }
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
-    fn generate_random_point(&mut self) -> Point {
+    fn generate_random_point(&mut self) -> Point<N> {
         let point = self.current_sample.unwrap().0;
 
         let radius = self.pattern.radius * (1.0 + self.rng.gen::<f64>());
         let angle = 2. * std::f64::consts::PI * self.rng.gen::<f64>();
+
+        let mut result = [0.0; N];
+        result[0] = point[0] + radius * angle.cos();
+        result[1] = point[1] + radius * angle.sin();
     
-        [
-            point[0] + radius * angle.cos(),
-            point[1] + radius * angle.sin(),
-        ]
+        result
     }
     
     /// Return true if the point is within the bounds of our space.
     ///
     /// This is true if 0 ≤ x < width and 0 ≤ y < height
-    fn in_rectangle(&self, point: Point) -> bool {
-        point[0] >= 0. && point[0] < self.pattern.width && point[1] >= 0. && point[1] < self.pattern.height
+    fn in_rectangle(&self, point: Point<N>) -> bool {
+        point[0] >= 0. && point[0] < self.pattern.dimensions[1] && point[1] >= 0. && point[1] < self.pattern.dimensions[0]
     }
     
     /// Returns true if there is at least one other sample point within `radius` of this point
-    fn in_neighborhood(&self, point: Point) -> bool {
+    fn in_neighborhood(&self, point: Point<N>) -> bool {
         let cell = self.point_to_cell(point);
-        let grid_width = (self.pattern.width / self.cell_size) as isize;
-        let grid_height = (self.pattern.height / self.cell_size) as isize;
+        let grid_width = (self.pattern.dimensions[1] / self.cell_size) as isize;
+        let grid_height = (self.pattern.dimensions[0] / self.cell_size) as isize;
 
         // We'll compare to distance squared, so we can skip the square root operation for better performance
         let r_squared = self.pattern.radius.powi(2);
@@ -246,10 +243,10 @@ impl PoissonIter {
     }
 }
 
-impl Iterator for PoissonIter {
-    type Item = Point;
+impl<const N: usize> Iterator for PoissonIter<N> {
+    type Item = Point<N>;
 
-    fn next(&mut self) -> Option<Point> {
+    fn next(&mut self) -> Option<Point<N>> {
         if self.current_sample == None {
             if !self.active.is_empty() {
                 // Pop points off our active list until it's exhausted
