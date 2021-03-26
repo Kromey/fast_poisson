@@ -15,3 +15,4 @@ exclude = ["/.github/*"]
 [dependencies]
 rand = "0.8.3"
 rand_xoshiro = "0.6.0"
+rand_distr = "0.4.0"

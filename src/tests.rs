@@ -160,6 +160,43 @@ fn point_generation_panics_with_no_point() {
 }
 
 #[test]
+fn point_generation_lies_within_radius() {
+    let mut iter = Poisson::<2>::new().iter();
+    iter.next(); // Ensures there is a current point
+
+    let (initial, _) = iter.current_sample.unwrap();
+    for _ in 0..50 {
+        let point = iter.generate_random_point();
+
+        let r = point.iter()
+            .zip(initial.iter())
+            .map(|(a, b)| (a - b).powi(2))
+            .sum::<f64>()
+            .sqrt();
+
+        assert!(r > iter.pattern.radius);
+        assert!(r < iter.pattern.radius * 2.);
+    }
+
+    let mut iter = Poisson::<3>::new().iter();
+    iter.next(); // Ensures there is a current point
+
+    let (initial, _) = iter.current_sample.unwrap();
+    for _ in 0..50 {
+        let point = iter.generate_random_point();
+
+        let r = point.iter()
+            .zip(initial.iter())
+            .map(|(a, b)| (a - b).powi(2))
+            .sum::<f64>()
+            .sqrt();
+
+        assert!(r > iter.pattern.radius);
+        assert!(r < iter.pattern.radius * 2.);
+    }
+}
+
+#[test]
 fn generate_random_point() {
     let mut iter = Poisson::<2>::new().iter();
     iter.current_sample = Some(([0.5, 0.5], 0));

@@ -67,6 +67,7 @@ mod tests;
 
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256StarStar;
+use rand_distr::StandardNormal;
 
 /// Builder for a Poisson disk distribution
 #[derive(Debug, Clone)]
@@ -204,16 +205,29 @@ impl<const N: usize> PoissonIter<N> {
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
     fn generate_random_point(&mut self) -> Point<N> {
-        let point = self.current_sample.unwrap().0;
+        let mut point = self.current_sample.unwrap().0;
 
-        let radius = self.pattern.radius * (1.0 + self.rng.gen::<f64>());
-        let angle = 2. * std::f64::consts::PI * self.rng.gen::<f64>();
+        let dist = self.pattern.radius * (1.0 + self.rng.gen::<f64>());
 
-        let mut result = [0.0; N];
-        result[0] = point[0] + radius * angle.cos();
-        result[1] = point[1] + radius * angle.sin();
-    
-        result
+        // Generate a randomly distributed vector
+        let mut vector = [0_f64; N];
+        for i in 0..N {
+            vector[i] = self.rng.sample(StandardNormal);
+        }
+        // Now find this new vector's magnitude
+        let mag = vector.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt();
+        
+        // Dividing each of the vector's components by `mag` will produce a unit vector; then by
+        // multiplying each component by `dist`, we'll have a vector pointing `dist` away from the
+        // origin. If we then add each of those components to our point, we'll have effectively
+        // translated our point by `dist` in a randomly chosen direction.
+        // Conveniently, we can do all of this in just one step!
+        let translate = dist / mag; // compute this just once!
+        for i in 0..N {
+            point[i] += vector[i] * translate;
+        }
+
+        point
     }
     
     /// Return true if the point is within the bounds of our space.
