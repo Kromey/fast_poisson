@@ -141,11 +141,16 @@ impl<const N: usize> PoissonIter<N> {
             Some(seed) => Xoshiro256StarStar::seed_from_u64(seed),
         };
 
+        let grid_size: usize = pattern.dimensions
+            .iter()
+            .map(|n| (n / cell_size).ceil() as usize)
+            .product();
+
         let mut iter = PoissonIter {
             pattern: pattern.clone(),
             rng,
             cell_size,
-            grid: vec![None; ((pattern.dimensions[0] / cell_size).ceil() * (pattern.dimensions[1] / cell_size).ceil()) as usize],
+            grid: vec![None; grid_size],
             active: Vec::new(),
             current_sample: None,
         };
