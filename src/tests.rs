@@ -13,6 +13,14 @@ fn new_is_default() {
 }
 
 #[test]
+fn unseeded_is_non_deterministic() {
+    let a = Poisson::new().iter();
+    let b = Poisson::new().iter();
+
+    assert!(a.zip(b).any(|(a, b)| a.0 - b.0 > f64::EPSILON || a.1 - b.1 > f64::EPSILON));
+}
+
+#[test]
 fn iter() {
     let poisson = Poisson::new();
 

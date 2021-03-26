@@ -79,7 +79,7 @@ pub struct Poisson {
     /// Radius around each point that must remain empty
     pub radius: f64,
     /// Seed to use for the internal RNG
-    pub seed: u64,
+    pub seed: Option<u64>,
     /// Number of samples to generate and test around each point
     pub num_samples: u32,
 }
@@ -100,7 +100,7 @@ impl Default for Poisson {
             width: 1.0,
             height: 1.0,
             radius: 0.1,
-            seed: 0,
+            seed: None,
             num_samples: 30,
         }
     }
@@ -139,9 +139,15 @@ impl PoissonIter {
         // We maintain a grid of our samples for faster radius checking
         let cell_size = pattern.radius / (2_f64).sqrt();
 
+        // If we were not given a seed, generate one non-deterministically
+        let rng = match pattern.seed {
+            None => Xoshiro256StarStar::from_rng(rand::thread_rng()).unwrap(),
+            Some(seed) => Xoshiro256StarStar::seed_from_u64(seed),
+        };
+
         let mut iter = PoissonIter {
             pattern: pattern.clone(),
-            rng: Xoshiro256StarStar::seed_from_u64(pattern.seed),
+            rng,
             cell_size,
             grid: vec![vec![None; (pattern.height / cell_size).ceil() as usize]; (pattern.width / cell_size).ceil() as usize],
             active: Vec::new(),
