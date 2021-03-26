@@ -39,8 +39,8 @@
 //!     y: f64,
 //! }
 //! 
-//! // Map the Poisson disk tuples to our `Point` struct
-//! let points = Poisson::new().iter().map(|(x, y)| Point { x, y });
+//! // Map the Poisson disk points to our `Point` struct
+//! let points = Poisson::new().iter().map(|[x, y]| Point { x, y });
 //! ```
 //! 
 //! Additionally, the iterator is lazily evaluated, meaning that points are only generated as
@@ -57,7 +57,7 @@
 //! use fast_poisson::Poisson;
 //! 
 //! for point in Poisson::new() {
-//!     println!("X: {}; Y: {}", point.0, point.1);
+//!     println!("X: {}; Y: {}", point[0], point[1]);
 //! }
 //! ```
 //!
@@ -115,8 +115,8 @@ impl IntoIterator for Poisson {
     }
 }
 
-/// A Point is simply a two-tuple of f64 values
-type Point = (f64, f64);
+/// A Point is simply an array of f64 values
+type Point = [f64; 2];
 
 /// An iterator over the points in the Poisson disk distribution
 pub struct PoissonIter {
@@ -155,7 +155,10 @@ impl PoissonIter {
         };
     
         // We have to generate an initial point, just to ensure we've got *something* in the active list
-        let first_point = (iter.rng.gen::<f64>() * pattern.width, iter.rng.gen::<f64>() * pattern.height);
+        let mut first_point = Point::default();
+        iter.rng.fill(&mut first_point);
+        first_point[0] *= pattern.width;
+        first_point[1] *= pattern.height;
         iter.add_point(first_point);
 
         iter
@@ -173,8 +176,8 @@ impl PoissonIter {
     /// Convert a sample point into grid cell coordinates
     fn sample_to_grid(&self, point: Point) -> (usize, usize) {
         (
-            (point.0 / self.cell_size) as usize,
-            (point.1 / self.cell_size) as usize,
+            (point[0] / self.cell_size) as usize,
+            (point[1] / self.cell_size) as usize,
         )
     }
 
@@ -185,17 +188,17 @@ impl PoissonIter {
         let radius = self.pattern.radius * (1.0 + self.rng.gen::<f64>());
         let angle = 2. * std::f64::consts::PI * self.rng.gen::<f64>();
     
-        (
-            point.0 + radius * angle.cos(),
-            point.1 + radius * angle.sin(),
-        )
+        [
+            point[0] + radius * angle.cos(),
+            point[1] + radius * angle.sin(),
+        ]
     }
     
     /// Return true if the point is within the bounds of our space.
     ///
     /// This is true if 0 ≤ x < width and 0 ≤ y < height
     fn in_rectangle(&self, point: Point) -> bool {
-        point.0 >= 0. && point.0 < self.pattern.width && point.1 >= 0. && point.1 < self.pattern.height
+        point[0] >= 0. && point[0] < self.pattern.width && point[1] >= 0. && point[1] < self.pattern.height
     }
     
     /// Returns true if there is at least one other sample point within `radius` of this point
@@ -220,7 +223,7 @@ impl PoissonIter {
     
                 // If there's a sample here, check that it's not too close to us
                 if let Some(point2) = self.grid[x as usize][y as usize] {
-                    if (point.0 - point2.0).powi(2) + (point.1 - point2.1).powi(2) < r_squared {
+                    if (point[0] - point2[0]).powi(2) + (point[1] - point2[1]).powi(2) < r_squared {
                         return true;
                     }
                 }

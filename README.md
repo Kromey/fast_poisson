@@ -20,7 +20,7 @@ dimension:
 use fast_poisson::Poisson;
 
 fn main() {
-    let poisson: Vec<(f64, f64)> = Poisson::new().iter().collect();
+    let poisson: Vec<[f64; 2]> = Poisson::new().iter().collect();
 }
 ```
 
