@@ -114,6 +114,9 @@ impl<const N: usize> IntoIterator for Poisson<N> {
 /// A Point is simply an array of f64 values
 type Point<const N: usize> = [f64; N];
 
+/// A Cell is the grid coordinates containing a given point
+type Cell<const N: usize> = [isize; N];
+
 /// An iterator over the points in the Poisson disk distribution
 pub struct PoissonIter<const N: usize> {
     /// The Pattern from which this iterator was built
@@ -175,16 +178,23 @@ impl<const N: usize> PoissonIter<N> {
     }
 
     /// Convert a point into grid cell coordinates
-    fn point_to_cell(&self, point: Point<N>) -> (isize, isize) {
-        let x = point[0] / self.cell_size;
-        let y = point[1] / self.cell_size;
+    fn point_to_cell(&self, point: Point<N>) -> Cell<N> {
+        let mut cell = [0isize; N];
 
-        (x as isize, y as isize)
+        for i in 0..N {
+            cell[i] = (point[i] / self.cell_size) as isize;
+        }
+
+        cell
     }
 
     /// Convert a cell into a grid vector index
-    fn cell_to_idx(&self, cell: (isize, isize)) -> usize {
-        (cell.0 as f64 * self.pattern.dimensions[1] / self.cell_size) as usize + cell.1 as usize
+    fn cell_to_idx(&self, cell: Cell<N>) -> usize {
+        //(cell.0 as f64 * self.pattern.dimensions[1] / self.cell_size) as usize + cell.1 as usize
+
+        cell.iter()
+            .zip(self.pattern.dimensions.iter())
+            .fold(0, |acc, (pn, dn)| acc * (dn / self.cell_size) as usize + *pn as usize)
     }
 
     /// Convenience function to go straight from point to grid vector index
@@ -222,19 +232,23 @@ impl<const N: usize> PoissonIter<N> {
         // We'll compare to distance squared, so we can skip the square root operation for better performance
         let r_squared = self.pattern.radius.powi(2);
     
-        for x in cell.0 - 2..=cell.0 + 2 {
+        for x in cell[0] - 2..=cell[0] + 2 {
             // Make sure we're still in our grid
             if x < 0 || x >= grid_width {
                 continue;
             }
-            for y in cell.1 - 2..=cell.1 + 2 {
+            for y in cell[1] - 2..=cell[1] + 2 {
                 // Make sure we're still in our grid
                 if y < 0 || y >= grid_height {
                     continue;
                 }
     
                 // If there's a sample here, check that it's not too close to us
-                let idx = self.cell_to_idx((x, y));
+                let mut neighbor_cell = [0; N];
+                neighbor_cell[0] = x;
+                neighbor_cell[1] = y;
+
+                let idx = self.cell_to_idx(neighbor_cell);
                 if let Some(point2) = self.grid[idx] {
                     if (point[0] - point2[0]).powi(2) + (point[1] - point2[1]).powi(2) < r_squared {
                         return true;

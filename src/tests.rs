@@ -68,6 +68,64 @@ fn n_dimensional_grid_size() {
 }
 
 #[test]
+fn n_dimensional_cell_to_idx() {
+    let poisson = Poisson::<3> {
+        dimensions: [3., 3., 3.],
+        ..Default::default()
+    };
+    let mut iter = poisson.iter();
+    // Coerce cell_size to more easily test cell_to_idx function
+    iter.cell_size = 1.;
+
+    assert_eq!(iter.cell_to_idx([0, 0, 0]), 0);
+    assert_eq!(iter.cell_to_idx([1, 1, 1]), 13);
+    assert_eq!(iter.cell_to_idx([1, 2, 1]), 16);
+    assert_eq!(iter.cell_to_idx([2, 1, 1]), 22);
+
+    let poisson = Poisson::<2> {
+        dimensions: [3., 3.],
+        ..Default::default()
+    };
+    let mut iter = poisson.iter();
+    // Coerce cell_size to more easily test cell_to_idx function
+    iter.cell_size = 1.;
+
+    assert_eq!(iter.cell_to_idx([0, 0]), 0);
+    assert_eq!(iter.cell_to_idx([1, 1]), 4);
+    assert_eq!(iter.cell_to_idx([1, 2]), 5);
+    assert_eq!(iter.cell_to_idx([2, 1]), 7);
+}
+
+#[test]
+fn n_dimensional_point_to_cell() {
+    let poisson = Poisson::<3> {
+        dimensions: [3., 3., 3.],
+        ..Default::default()
+    };
+    let mut iter = poisson.iter();
+    // Coerce cell_size to more easily test point_to_cell function
+    iter.cell_size = 2.;
+
+    assert_eq!(iter.point_to_cell([0., 0., 0.]), [0, 0, 0]);
+    assert_eq!(iter.point_to_cell([1., 1., 1.]), [0, 0, 0]);
+    assert_eq!(iter.point_to_cell([1., 2., 1.]), [0, 1, 0]);
+    assert_eq!(iter.point_to_cell([2., 3., 1.]), [1, 1, 0]);
+
+    let poisson = Poisson::<2> {
+        dimensions: [3., 3.],
+        ..Default::default()
+    };
+    let mut iter = poisson.iter();
+    // Coerce cell_size to more easily test point_to_cell function
+    iter.cell_size = 2.;
+
+    assert_eq!(iter.point_to_cell([0., 0.]), [0, 0]);
+    assert_eq!(iter.point_to_cell([1., 1.]), [0, 0]);
+    assert_eq!(iter.point_to_cell([1., 2.]), [0, 1]);
+    assert_eq!(iter.point_to_cell([2., 3.]), [1, 1]);
+}
+
+#[test]
 fn sample_to_grid() {
     let iter = Poisson::<2>::new().iter();
 
