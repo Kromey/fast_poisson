@@ -212,17 +212,17 @@ fn generate_random_point() {
 }
 
 #[test]
-fn in_rectangle() {
+fn in_space() {
     let iter = Poisson::<2>::new().iter();
 
     // Affirmative tests
-    assert!(iter.in_rectangle([0.0, 0.0]));
-    assert!(iter.in_rectangle([0.5, 0.5]));
+    assert!(iter.in_space([0.0, 0.0]));
+    assert!(iter.in_space([0.5, 0.5]));
 
     // Negative tests
-    assert!(!iter.in_rectangle([1.0, 1.0]));
-    assert!(!iter.in_rectangle([1.0, 2.0]));
-    assert!(!iter.in_rectangle([-0.1, 0.0]));
+    assert!(!iter.in_space([1.0, 1.0]));
+    assert!(!iter.in_space([1.0, 2.0]));
+    assert!(!iter.in_space([-0.1, 0.0]));
 }
 
 #[test]

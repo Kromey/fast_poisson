@@ -233,8 +233,10 @@ impl<const N: usize> PoissonIter<N> {
     /// Return true if the point is within the bounds of our space.
     ///
     /// This is true if 0 ≤ x < width and 0 ≤ y < height
-    fn in_rectangle(&self, point: Point<N>) -> bool {
-        point[0] >= 0. && point[0] < self.pattern.dimensions[1] && point[1] >= 0. && point[1] < self.pattern.dimensions[0]
+    fn in_space(&self, point: Point<N>) -> bool {
+        point.iter()
+            .zip(self.pattern.dimensions.iter())
+            .all(|(p, d)| *p >= 0. && p < d)
     }
     
     /// Returns true if there is at least one other sample point within `radius` of this point
@@ -301,7 +303,7 @@ impl<const N: usize> Iterator for PoissonIter<N> {
     
                 // Ensure we've picked a point inside the bounds of our rectangle, and more than `radius`
                 // distance from any other sampled point
-                if self.in_rectangle(point)
+                if self.in_space(point)
                     && !self.in_neighborhood(point)
                 {
                     // We've got a good one!
