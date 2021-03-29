@@ -16,7 +16,9 @@ fn unseeded_is_non_deterministic() {
     let a = Poisson::<2>::new().iter();
     let b = Poisson::<2>::new().iter();
 
-    assert!(a.zip(b).any(|(a, b)| a[0] - b[0] > f64::EPSILON || a[1] - b[1] > f64::EPSILON));
+    assert!(a
+        .zip(b)
+        .any(|(a, b)| a[0] - b[0] > f64::EPSILON || a[1] - b[1] > f64::EPSILON));
 }
 
 #[test]
@@ -64,10 +66,22 @@ fn n_dimensional_grid_size() {
         let iter4 = poisson4.iter();
 
         assert_eq!(iter0.grid.len(), 1);
-        assert_eq!(iter1.grid.len(), (n as f64 / iter2.cell_size).ceil() as usize);
-        assert_eq!(iter2.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(2));
-        assert_eq!(iter3.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(3));
-        assert_eq!(iter4.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(4));
+        assert_eq!(
+            iter1.grid.len(),
+            (n as f64 / iter2.cell_size).ceil() as usize
+        );
+        assert_eq!(
+            iter2.grid.len(),
+            ((n as f64 / iter2.cell_size).ceil() as usize).pow(2)
+        );
+        assert_eq!(
+            iter3.grid.len(),
+            ((n as f64 / iter2.cell_size).ceil() as usize).pow(3)
+        );
+        assert_eq!(
+            iter4.grid.len(),
+            ((n as f64 / iter2.cell_size).ceil() as usize).pow(4)
+        );
     }
 }
 
@@ -135,7 +149,7 @@ fn sample_to_grid() {
 
     for &point in &[[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]] {
         let idx = iter.point_to_idx(point);
-    
+
         // Trying to access this will panic if it's out of bound in any way
         // TODO: Should do more robust testing of the results
         let _ = iter.grid[idx];
@@ -172,7 +186,8 @@ fn point_generation_lies_within_radius() {
     for _ in 0..50 {
         let point = iter.generate_random_point();
 
-        let r = point.iter()
+        let r = point
+            .iter()
             .zip(initial.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()
@@ -189,7 +204,8 @@ fn point_generation_lies_within_radius() {
     for _ in 0..50 {
         let point = iter.generate_random_point();
 
-        let r = point.iter()
+        let r = point
+            .iter()
             .zip(initial.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()
