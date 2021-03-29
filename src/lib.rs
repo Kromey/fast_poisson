@@ -3,6 +3,15 @@
 //! This is an implementation of Bridson's ["Fast Poisson Disk Sampling"][Bridson] algorithm in
 //! arbitrary dimensions.
 //!
+//! # Features
+//!
+//!  * Iterator-based generation lets you leverage the full power of Rust's
+//!    [Iterators](Iterator)
+//!  * Lazy evaluation of the distribution means that even complex Iterator chains are O(N);
+//!    with other libraries operations like mapping into another struct become O(N²) or more!
+//!  * Using Rust's const generics allows you to consume the distribution with no additional
+//!    dependencies
+//!
 //! # Examples
 //!
 //! To generate a simple Poisson disk pattern in the range (0, 1] for each of the x and y
@@ -17,19 +26,12 @@
 //! ```
 //! use fast_poisson::Poisson;
 //!
-//! let poisson = Poisson::<2> {
-//!     dimensions: [100.0, 100.0],
-//!     radius: 5.0,
-//!     ..Default::default()
-//! };
-//! let points = poisson.iter();
+//! let points = Poisson::<2>::new().with_dimensions([100.0, 100.0], 5.0).iter();
 //! ```
-//! **Caution:** If you specify a box size much larger than 1x1, you *should* specify a radius as
-//! well. Otherwise the resulting distribution may have *far more* points than you are prepared to
-//! handle, and may take longer to generate than expected.
 //!
 //! Because [`iter`](Poisson::iter) returns an iterator, you have access to the full power of Rust
-//! iterator methods to further manipulate the results:
+//! iterator methods to further manipulate the results, and all within O(N) time because the
+//! distribution is lazily generated within each iteration:
 //! ```
 //! use fast_poisson::Poisson;
 //!
@@ -38,12 +40,12 @@
 //!     y: f64,
 //! }
 //!
-//! // Map the Poisson disk points to our `Point` struct
+//! // Map the Poisson disk points to our `Point` struct in O(N) time!
 //! let points = Poisson::<2>::new().iter().map(|[x, y]| Point { x, y });
 //! ```
 //!
-//! Additionally, the iterator is lazily evaluated, meaning that points are only generated as
-//! needed:
+//! You can even take just a subset of the distribution without ever spending time calculating the
+//! discarded points:
 //! ```
 //! use fast_poisson::Poisson;
 //!
@@ -51,7 +53,7 @@
 //! let points = Poisson::<2>::new().iter().take(5);
 //! ```
 //!
-//! You can even use [`Poisson`] directly within a `for` loop!
+//! `Poisson` implements [`IntoIterator`], so you can e.g. directly consume it with a `for` loop:
 //! ```
 //! use fast_poisson::Poisson;
 //!
@@ -73,13 +75,13 @@ use rand_xoshiro::Xoshiro256StarStar;
 #[derive(Debug, Clone)]
 pub struct Poisson<const N: usize> {
     /// Dimensions of the box
-    pub dimensions: [f64; N],
+    dimensions: [f64; N],
     /// Radius around each point that must remain empty
-    pub radius: f64,
+    radius: f64,
     /// Seed to use for the internal RNG
-    pub seed: Option<u64>,
+    seed: Option<u64>,
     /// Number of samples to generate and test around each point
-    pub num_samples: u32,
+    num_samples: u32,
 }
 
 impl<const N: usize> Poisson<N> {
@@ -90,7 +92,81 @@ impl<const N: usize> Poisson<N> {
         Self::default()
     }
 
+    /// Specify the space to be filled and the radius around each point
+    ///
+    /// By default, the output will sample each dimension from the semi-open range [0.0, 1.0). This
+    /// method can be used to modify the results to fill any arbitrary space.
+    ///
+    /// To generate a 2-dimensional distribution in a 5×5 square, with no points closer than 1:
+    /// ```
+    /// # use fast_poisson::Poisson;
+    /// let mut points = Poisson::<2>::new().with_dimensions([5.0, 5.0], 1.0).iter();
+    ///
+    /// assert!(points.all(|p| p[0] >= 0.0 && p[0] < 5.0 && p[1] >= 0.0 && p[1] < 5.0));
+    /// ```
+    ///
+    /// To generate a 3-dimensional distribution in a 3×3×5 prism, with no points closer than 0.75:
+    /// ```
+    /// # use fast_poisson::Poisson;
+    /// let mut points = Poisson::<3>::new().with_dimensions([3.0, 3.0, 5.0], 0.75).iter();
+    ///
+    /// assert!(points.all(|p| {
+    ///     p[0] >= 0.0 && p[0] < 3.0
+    ///     && p[1] >= 0.0 && p[1] < 3.0
+    ///     && p[2] >= 0.0 && p[2] < 5.0
+    /// }));
+    /// ```
+    pub fn with_dimensions(&mut self, dimensions: [f64; N], radius: f64) -> &mut Self {
+        self.dimensions = dimensions;
+        self.radius = radius;
+
+        self
+    }
+
+    /// Specify the RNG seed for this distribution
+    ///
+    /// If no seed is specified then the internal RNG will be seeded from [`rand::thread_rng()`],
+    /// providing non-deterministic results.
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson;
+    /// let points = Poisson::<2>::new().with_seed(0xBADBEEF).iter();
+    /// ```
+    pub fn with_seed(&mut self, seed: u64) -> &Self {
+        self.seed = Some(seed);
+
+        self
+    }
+
+    /// Specify the number of samples to generate around each point in the distribution
+    ///
+    /// A higher number may result in better space filling, but will slow down generation. Note that
+    /// specifying a number of samples does not ensure that the final distribution includes this
+    /// number of points around each other point; rather, each sample is tested for validity before
+    /// being included, so the final distribution will have *up to* the specified number of points
+    /// generated from each point.
+    ///
+    /// By default 30 samples are selected around each point.
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson;
+    /// let points = Poisson::<3>::new().with_samples(40).iter();
+    /// ```
+    pub fn with_samples(&mut self, samples: u32) -> &Self {
+        self.num_samples = samples;
+
+        self
+    }
+
     /// Returns an iterator over the points in this distribution
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson;
+    /// let points = Poisson::<3>::new();
+    ///
+    /// for point in points.iter() {
+    ///     println!("{:?}", point);
+    /// }
     pub fn iter(&self) -> PoissonIter<N> {
         PoissonIter::new(self.clone())
     }
