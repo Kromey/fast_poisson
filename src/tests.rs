@@ -45,22 +45,26 @@ fn into_iter() {
 #[test]
 fn n_dimensional_grid_size() {
     for n in 1..=3 {
-        //let mut poisson1 = Poisson::<1>::new(); // 1-D currently doesn't work due to hard-coded indexes
+        let mut poisson0 = Poisson::<0>::new();
+        let mut poisson1 = Poisson::<1>::new();
         let mut poisson2 = Poisson::<2>::new();
         let mut poisson3 = Poisson::<3>::new();
         let mut poisson4 = Poisson::<4>::new();
 
-        //poisson1.dimensions = [n as f64];
+        poisson0.dimensions = [];
+        poisson1.dimensions = [n as f64];
         poisson2.dimensions = [n as f64; 2];
         poisson3.dimensions = [n as f64; 3];
         poisson4.dimensions = [n as f64; 4];
 
-        //let iter1 = poisson1.iter();
+        let iter0 = poisson0.iter();
+        let iter1 = poisson1.iter();
         let iter2 = poisson2.iter();
         let iter3 = poisson3.iter();
         let iter4 = poisson4.iter();
 
-        //assert_eq!(iter1.grid.len(), (n as f64 / iter2.cell_size).ceil() as usize);
+        assert_eq!(iter0.grid.len(), 1);
+        assert_eq!(iter1.grid.len(), (n as f64 / iter2.cell_size).ceil() as usize);
         assert_eq!(iter2.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(2));
         assert_eq!(iter3.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(3));
         assert_eq!(iter4.grid.len(), ((n as f64 / iter2.cell_size).ceil() as usize).pow(4));
