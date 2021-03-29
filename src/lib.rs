@@ -191,8 +191,6 @@ impl<const N: usize> PoissonIter<N> {
 
     /// Convert a cell into a grid vector index
     fn cell_to_idx(&self, cell: Cell<N>) -> usize {
-        //(cell.0 as f64 * self.pattern.dimensions[1] / self.cell_size) as usize + cell.1 as usize
-
         cell.iter()
             .zip(self.pattern.dimensions.iter())
             .fold(0, |acc, (pn, dn)| acc * (dn / self.cell_size) as usize + *pn as usize)
@@ -230,50 +228,63 @@ impl<const N: usize> PoissonIter<N> {
         point
     }
     
-    /// Return true if the point is within the bounds of our space.
+    /// Returns true if the point is within the bounds of our space.
     ///
-    /// This is true if 0 ≤ x < width and 0 ≤ y < height
+    /// This is true if 0 ≤ point[i] < dimensions[i]
     fn in_space(&self, point: Point<N>) -> bool {
         point.iter()
             .zip(self.pattern.dimensions.iter())
             .all(|(p, d)| *p >= 0. && p < d)
     }
+
+    /// Returns true if the cell is within the bounds of our grid.
+    /// 
+    /// This is true if 0 ≤ cell[i] ≤ ceiling(space[i] / cell_size)
+    fn in_grid(&self, cell: Cell<N>) -> bool {
+        cell.iter()
+            .zip(self.pattern.dimensions.iter())
+            .all(|(c, d)| *c >= 0 && *c < (*d / self.cell_size).ceil() as isize)
+    }
     
     /// Returns true if there is at least one other sample point within `radius` of this point
     fn in_neighborhood(&self, point: Point<N>) -> bool {
         let cell = self.point_to_cell(point);
-        let grid_width = (self.pattern.dimensions[1] / self.cell_size) as isize;
-        let grid_height = (self.pattern.dimensions[0] / self.cell_size) as isize;
 
         // We'll compare to distance squared, so we can skip the square root operation for better performance
         let r_squared = self.pattern.radius.powi(2);
-    
-        for x in cell[0] - 2..=cell[0] + 2 {
-            // Make sure we're still in our grid
-            if x < 0 || x >= grid_width {
+
+        for mut carry in 0.. {
+            let mut neighbor = cell;
+
+            // We can add our current iteration count to visit each neighbor cell
+            for i in (&mut neighbor).iter_mut() {
+                // We clamp our addition to the range [-2, 2] for each cell
+                *i += carry % 5 - 2;
+                // Since we modulo by 5 to get the right range, integer division by 5 "advances" us
+                carry /= 5;
+            }
+
+            if carry > 0 {
+                // If we've "overflowed" then we've already tested every neighbor cell
+                return false;
+            }
+            if !self.in_grid(neighbor) {
                 continue;
             }
-            for y in cell[1] - 2..=cell[1] + 2 {
-                // Make sure we're still in our grid
-                if y < 0 || y >= grid_height {
-                    continue;
-                }
-    
-                // If there's a sample here, check that it's not too close to us
-                let mut neighbor_cell = [0; N];
-                neighbor_cell[0] = x;
-                neighbor_cell[1] = y;
 
-                let idx = self.cell_to_idx(neighbor_cell);
-                if let Some(point2) = self.grid[idx] {
-                    if (point[0] - point2[0]).powi(2) + (point[1] - point2[1]).powi(2) < r_squared {
-                        return true;
-                    }
+            if let Some(point2) = self.grid[self.cell_to_idx(neighbor)] {
+                let neighbor_dist_squared = point.iter()
+                    .zip(point2.iter())
+                    .map(|(a, b)| (a - b).powi(2))
+                    .sum::<f64>();
+
+                if neighbor_dist_squared < r_squared {
+                    return true;
                 }
             }
         }
-    
-        // We only make it to here if we find no samples too close
+
+        // Rust can't tell the previous loop will always reach one of the `return` statements...
         false
     }
 }
