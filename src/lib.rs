@@ -1,7 +1,7 @@
 //! Generate a Poisson disk distribution.
 //!
-//! This is an implementation of Bridson's ["Fast Poisson Disk Sampling"][Bridson] algorithm. At
-//! present, however, this library only implements it for 2 dimensions.
+//! This is an implementation of Bridson's ["Fast Poisson Disk Sampling"][Bridson] algorithm in
+//! arbitrary dimensions.
 //!
 //! # Examples
 //!
