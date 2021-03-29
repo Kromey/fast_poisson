@@ -17,23 +17,23 @@
 //! To generate a simple Poisson disk pattern in the range (0, 1] for each of the x and y
 //! dimensions:
 //! ```
-//! use fast_poisson::Poisson;
+//! use fast_poisson::Poisson2D;
 //!
-//! let points = Poisson::<2>::new().iter();
+//! let points = Poisson2D::new().iter();
 //! ```
 //!
 //! To fill a box, specify the width and height:
 //! ```
-//! use fast_poisson::Poisson;
+//! use fast_poisson::Poisson2D;
 //!
-//! let points = Poisson::<2>::new().with_dimensions([100.0, 100.0], 5.0).iter();
+//! let points = Poisson2D::new().with_dimensions([100.0, 100.0], 5.0).iter();
 //! ```
 //!
 //! Because [`iter`](Poisson::iter) returns an iterator, you have access to the full power of Rust
 //! iterator methods to further manipulate the results, and all within O(N) time because the
 //! distribution is lazily generated within each iteration:
 //! ```
-//! use fast_poisson::Poisson;
+//! use fast_poisson::Poisson2D;
 //!
 //! struct Point {
 //!     x: f64,
@@ -41,25 +41,45 @@
 //! }
 //!
 //! // Map the Poisson disk points to our `Point` struct in O(N) time!
-//! let points = Poisson::<2>::new().iter().map(|[x, y]| Point { x, y });
+//! let points = Poisson2D::new().iter().map(|[x, y]| Point { x, y });
 //! ```
 //!
 //! You can even take just a subset of the distribution without ever spending time calculating the
 //! discarded points:
 //! ```
-//! use fast_poisson::Poisson;
+//! use fast_poisson::Poisson2D;
 //!
 //! // Only 5 points from the distribution are actually generated!
-//! let points = Poisson::<2>::new().iter().take(5);
+//! let points = Poisson2D::new().iter().take(5);
 //! ```
 //!
 //! `Poisson` implements [`IntoIterator`], so you can e.g. directly consume it with a `for` loop:
 //! ```
-//! use fast_poisson::Poisson;
+//! use fast_poisson::Poisson2D;
 //!
-//! for point in Poisson::<2>::new() {
+//! for point in Poisson2D::new() {
 //!     println!("X: {}; Y: {}", point[0], point[1]);
 //! }
+//! ```
+//! 
+//! Higher-order Poisson disk distributions are generated just as easily:
+//! ```
+//! use fast_poisson::{Poisson, Poisson3D, Poisson4D};
+//! 
+//! // 3-dimensional distribution
+//! let points_3d = Poisson3D::new().iter();
+//! 
+//! // 4-dimensional distribution
+//! let mut points_4d = Poisson4D::new();
+//! // To achieve desired levels of performance, you should set a larger radius for
+//! // higher-order distributions
+//! points_4d.with_dimensions([1.0; 4], 0.2);
+//! let points_4d = points_4d.iter();
+//! 
+//! // For more than 4 dimensions, use `Poisson` directly:
+//! let mut points_7d = Poisson::<7>::new();
+//! points_7d.with_dimensions([1.0; 7], 0.6);
+//! let points_7d = points_7d.iter();
 //! ```
 //!
 //! [Bridson]: https://www.cct.lsu.edu/~fharhad/ganbatte/siggraph2007/CD2/content/sketches/0250.pdf
@@ -71,7 +91,18 @@ use rand::prelude::*;
 use rand_distr::StandardNormal;
 use rand_xoshiro::Xoshiro256StarStar;
 
-/// Builder for a Poisson disk distribution
+/// [`Poisson`] disk distribution in 2 dimensions
+pub type Poisson2D = Poisson<2>;
+/// [`Poisson`] disk distribution in 3 dimensions
+pub type Poisson3D = Poisson<3>;
+/// [`Poisson`] disk distribution in 4 dimensions
+pub type Poisson4D = Poisson<4>;
+
+/// Poisson disk distribution in N dimensions
+/// 
+/// Distributions can be generated for any non-negative number of dimensions, although performance
+/// depends upon the volume of the space: for higher-order dimensions you may need to [increase the
+/// radius](Poisson::with_dimensions) to achieve the desired level of performance.
 #[derive(Debug, Clone)]
 pub struct Poisson<const N: usize> {
     /// Dimensions of the box

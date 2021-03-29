@@ -23,8 +23,22 @@ fn unseeded_is_non_deterministic() {
 
 #[test]
 fn iter() {
-    let poisson = Poisson::<2>::new();
+    // 2-dimensional distribution
+    let poisson = Poisson2D::new();
+    for _point in poisson.iter() {}
 
+    // 3-dimensional distribution
+    let poisson = Poisson3D::new();
+    for _point in poisson.iter() {}
+    
+    // 4-dimensional distribution
+    let mut poisson = Poisson4D::new();
+    poisson.with_dimensions([1.0; 4], 0.2);
+    for _point in poisson.iter() {}
+    
+    // For more than 4 dimensions, use `Poisson` directly:
+    let mut poisson = Poisson::<7>::new();
+    poisson.with_dimensions([1.0; 7], 0.7);
     for _point in poisson.iter() {}
 }
 
