@@ -178,8 +178,8 @@ fn point_generation_lies_within_radius() {
             .sum::<f64>()
             .sqrt();
 
-        assert!(r > iter.pattern.radius);
-        assert!(r < iter.pattern.radius * 2.);
+        assert!(r > iter.distribution.radius);
+        assert!(r < iter.distribution.radius * 2.);
     }
 
     let mut iter = Poisson::<3>::new().iter();
@@ -195,8 +195,8 @@ fn point_generation_lies_within_radius() {
             .sum::<f64>()
             .sqrt();
 
-        assert!(r > iter.pattern.radius);
-        assert!(r < iter.pattern.radius * 2.);
+        assert!(r > iter.distribution.radius);
+        assert!(r < iter.distribution.radius * 2.);
     }
 }
 
@@ -274,7 +274,7 @@ fn out_of_bounds_point_is_not_neighbor() {
     iter.grid = vec![None; iter.grid.len()];
 
     // Enlarge radius
-    iter.pattern.radius = 0.5;
+    iter.distribution.radius = 0.5;
     // Add test point near perimeter
     iter.add_point([0.9, 0.9]);
 

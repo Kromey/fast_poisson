@@ -83,12 +83,16 @@ pub struct Poisson<const N: usize> {
 }
 
 impl<const N: usize> Poisson<N> {
+    /// Create a new Poisson disk distribution
+    /// 
+    /// Currently the same as `Default::default()`
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns an iterator over the points in this distribution
     pub fn iter(&self) -> PoissonIter<N> {
-        PoissonIter::new(self)
+        PoissonIter::new(self.clone())
     }
 }
 
@@ -108,7 +112,7 @@ impl<const N: usize> IntoIterator for Poisson<N> {
     type IntoIter = PoissonIter<N>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter()
+        PoissonIter::new(self)
     }
 }
 
@@ -120,8 +124,8 @@ type Cell<const N: usize> = [isize; N];
 
 /// An iterator over the points in the Poisson disk distribution
 pub struct PoissonIter<const N: usize> {
-    /// The Pattern from which this iterator was built
-    pattern: Poisson<N>,
+    /// The distribution from which this iterator was built
+    distribution: Poisson<N>,
     /// The RNG
     rng: Xoshiro256StarStar,
     /// The size of each cell in the grid
@@ -135,35 +139,39 @@ pub struct PoissonIter<const N: usize> {
 }
 
 impl<const N: usize> PoissonIter<N> {
-    pub fn new(pattern: &Poisson<N>) -> Self {
+    /// Create an iterator over the specified distribution
+    fn new(distribution: Poisson<N>) -> Self {
         // We maintain a grid of our samples for faster radius checking
-        let cell_size = pattern.radius / (2_f64).sqrt();
+        let cell_size = distribution.radius / (2_f64).sqrt();
 
         // If we were not given a seed, generate one non-deterministically
-        let rng = match pattern.seed {
+        let mut rng = match distribution.seed {
             None => Xoshiro256StarStar::from_rng(rand::thread_rng()).unwrap(),
             Some(seed) => Xoshiro256StarStar::seed_from_u64(seed),
         };
 
-        let grid_size: usize = pattern.dimensions
+        // Calculate the amount of storage we'll need for our n-dimensional grid, which is stored
+        // as a single-dimensional array.
+        let grid_size: usize = distribution.dimensions
             .iter()
             .map(|n| (n / cell_size).ceil() as usize)
             .product();
+    
+        // We have to generate an initial point, just to ensure we've got *something* in the active list
+        let mut first_point = [0.0; N];
+        for i in 0..N {
+            first_point[i] = rng.gen::<f64>() * distribution.dimensions[i];
+        }
 
         let mut iter = PoissonIter {
-            pattern: pattern.clone(),
+            distribution,
             rng,
             cell_size,
             grid: vec![None; grid_size],
             active: Vec::new(),
             current_sample: None,
         };
-    
-        // We have to generate an initial point, just to ensure we've got *something* in the active list
-        let mut first_point = [0.0; N];
-        for i in 0..N {
-            first_point[i] = iter.rng.gen::<f64>() * pattern.dimensions[i];
-        }
+        // Don't forget to add our initial point
         iter.add_point(first_point);
 
         iter
@@ -171,6 +179,7 @@ impl<const N: usize> PoissonIter<N> {
 
     /// Add a point to our pattern
     fn add_point(&mut self, point: Point<N>) {
+        // Add it to the active list
         self.active.push(point);
 
         // Now stash this point in our grid
@@ -192,20 +201,25 @@ impl<const N: usize> PoissonIter<N> {
     /// Convert a cell into a grid vector index
     fn cell_to_idx(&self, cell: Cell<N>) -> usize {
         cell.iter()
-            .zip(self.pattern.dimensions.iter())
+            .zip(self.distribution.dimensions.iter())
             .fold(0, |acc, (pn, dn)| acc * (dn / self.cell_size) as usize + *pn as usize)
     }
 
-    /// Convenience function to go straight from point to grid vector index
+    /// Convert a point into a grid vector index
     fn point_to_idx(&self, point: Point<N>) -> usize {
         self.cell_to_idx(self.point_to_cell(point))
     }
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
+    /// 
+    /// # Panics
+    /// 
+    /// Will panic if `current_sample` is None
     fn generate_random_point(&mut self) -> Point<N> {
         let mut point = self.current_sample.unwrap().0;
 
-        let dist = self.pattern.radius * (1.0 + self.rng.gen::<f64>());
+        // Pick a random distance away from our point
+        let dist = self.distribution.radius * (1.0 + self.rng.gen::<f64>());
 
         // Generate a randomly distributed vector
         let mut vector = [0_f64; N];
@@ -233,7 +247,7 @@ impl<const N: usize> PoissonIter<N> {
     /// This is true if 0 ≤ point[i] < dimensions[i]
     fn in_space(&self, point: Point<N>) -> bool {
         point.iter()
-            .zip(self.pattern.dimensions.iter())
+            .zip(self.distribution.dimensions.iter())
             .all(|(p, d)| *p >= 0. && p < d)
     }
 
@@ -242,7 +256,7 @@ impl<const N: usize> PoissonIter<N> {
     /// This is true if 0 ≤ cell[i] ≤ ceiling(space[i] / cell_size)
     fn in_grid(&self, cell: Cell<N>) -> bool {
         cell.iter()
-            .zip(self.pattern.dimensions.iter())
+            .zip(self.distribution.dimensions.iter())
             .all(|(c, d)| *c >= 0 && *c < (*d / self.cell_size).ceil() as isize)
     }
     
@@ -251,7 +265,7 @@ impl<const N: usize> PoissonIter<N> {
         let cell = self.point_to_cell(point);
 
         // We'll compare to distance squared, so we can skip the square root operation for better performance
-        let r_squared = self.pattern.radius.powi(2);
+        let r_squared = self.distribution.radius.powi(2);
 
         for mut carry in 0.. {
             let mut neighbor = cell;
@@ -269,6 +283,7 @@ impl<const N: usize> PoissonIter<N> {
                 return false;
             }
             if !self.in_grid(neighbor) {
+                // Skip anything beyond the bounds of our grid
                 continue;
             }
 
@@ -305,7 +320,7 @@ impl<const N: usize> Iterator for PoissonIter<N> {
         }
 
         if let Some((point, mut i)) = self.current_sample {
-            while i < self.pattern.num_samples {
+            while i < self.distribution.num_samples {
                 i += 1;
                 self.current_sample = Some((point, i));
 
