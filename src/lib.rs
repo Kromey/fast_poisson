@@ -160,8 +160,8 @@ impl<const N: usize> PoissonIter<N> {
 
         // We have to generate an initial point, just to ensure we've got *something* in the active list
         let mut first_point = [0.0; N];
-        for i in 0..N {
-            first_point[i] = rng.gen::<f64>() * distribution.dimensions[i];
+        for (i, dim) in first_point.iter_mut().zip(distribution.dimensions.iter()) {
+            *i = rng.gen::<f64>() * dim;
         }
 
         let mut iter = PoissonIter {
@@ -226,8 +226,8 @@ impl<const N: usize> PoissonIter<N> {
 
         // Generate a randomly distributed vector
         let mut vector = [0_f64; N];
-        for i in 0..N {
-            vector[i] = self.rng.sample(StandardNormal);
+        for i in vector.iter_mut() {
+            *i = self.rng.sample(StandardNormal);
         }
         // Now find this new vector's magnitude
         let mag = vector.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt();
@@ -313,15 +313,13 @@ impl<const N: usize> Iterator for PoissonIter<N> {
     type Item = Point<N>;
 
     fn next(&mut self) -> Option<Point<N>> {
-        if self.current_sample == None {
-            if !self.active.is_empty() {
-                // Pop points off our active list until it's exhausted
-                let point = {
-                    let i = self.rng.gen_range(0..self.active.len());
-                    self.active.swap_remove(i)
-                };
-                self.current_sample = Some((point, 0));
-            }
+        if self.current_sample == None && !self.active.is_empty() {
+            // Pop points off our active list until it's exhausted
+            let point = {
+                let i = self.rng.gen_range(0..self.active.len());
+                self.active.swap_remove(i)
+            };
+            self.current_sample = Some((point, 0));
         }
 
         if let Some((point, mut i)) = self.current_sample {
