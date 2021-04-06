@@ -17,10 +17,10 @@ A simple example to generate a `Vec` containing a Poisson distribution within [0
 dimension:
 
 ```rust
-use fast_poisson::Poisson;
+use fast_poisson::Poisson2D;
 
 fn main() {
-    let poisson: Vec<[f64; 2]> = Poisson::new().iter().collect();
+    let poisson: Vec<[f64; 2]> = Vec::from(Poisson2D::new());
 }
 ```
 

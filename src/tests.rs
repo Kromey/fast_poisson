@@ -30,12 +30,12 @@ fn iter() {
     // 3-dimensional distribution
     let poisson = Poisson3D::new();
     for _point in poisson.iter() {}
-    
+
     // 4-dimensional distribution
     let mut poisson = Poisson4D::new();
     poisson.with_dimensions([1.0; 4], 0.2);
     for _point in poisson.iter() {}
-    
+
     // For more than 4 dimensions, use `Poisson` directly:
     let mut poisson = Poisson::<7>::new();
     poisson.with_dimensions([1.0; 7], 0.7);
@@ -309,4 +309,11 @@ fn out_of_bounds_point_is_not_neighbor() {
     iter.add_point([0.9, 0.9]);
 
     assert!(!iter.in_neighborhood([1.1, 1.1])); // Out of bounds by definition has no neighbors
+}
+
+#[test]
+fn into_vec() {
+    let poisson = Poisson2D::new();
+
+    let _vec: Vec<[f64; 2]> = Vec::from(poisson);
 }

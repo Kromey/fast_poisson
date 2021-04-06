@@ -7,8 +7,8 @@
 //!
 //!  * Iterator-based generation lets you leverage the full power of Rust's
 //!    [Iterators](Iterator)
-//!  * Lazy evaluation of the distribution means that even complex Iterator chains are O(N);
-//!    with other libraries operations like mapping into another struct become O(N²) or more!
+//!  * Lazy evaluation of the distribution means that even complex Iterator chains are as fast as
+//!    O(N); with other libraries operations like mapping into another struct become O(N²) or more!
 //!  * Using Rust's const generics allows you to consume the distribution with no additional
 //!    dependencies
 //!
@@ -19,19 +19,18 @@
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
-//! let points = Poisson2D::new().iter();
+//! let points: Vec<[f64; 2]> = Vec::from(Poisson2D::new());
 //! ```
 //!
 //! To fill a box, specify the width and height:
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
-//! let points = Poisson2D::new().with_dimensions([100.0, 100.0], 5.0).iter();
+//! let points = Poisson2D::new().with_dimensions([100.0, 100.0], 5.0);
 //! ```
 //!
-//! Because [`iter`](Poisson::iter) returns an iterator, you have access to the full power of Rust
-//! iterator methods to further manipulate the results, and all within O(N) time because the
-//! distribution is lazily generated within each iteration:
+//! You have full access to the power of Rust iterator methods to manipulate the distribution,
+//! and all within O(N) time because the points are lazily generated within each iteration:
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
@@ -42,6 +41,25 @@
 //!
 //! // Map the Poisson disk points to our `Point` struct in O(N) time!
 //! let points = Poisson2D::new().iter().map(|[x, y]| Point { x, y });
+//! ```
+//!
+//! The previous example can also be written concisely to leverage the `From` trait if you want to
+//! collect into a `Vec<Point>`:
+//! ```
+//! # use fast_poisson::Poisson2D;
+//! # struct Point { x: f64, y: f64 }
+//!
+//! impl From<[f64; 2]> for Point {
+//!     fn from(point: [f64; 2]) -> Point {
+//!         Point {
+//!             x: point[0],
+//!             y: point[1],
+//!         }
+//!     }
+//! }
+//!
+//! // Could also be written using `.into()`
+//! let points: Vec<Point> = Vec::from(Poisson2D::new());
 //! ```
 //!
 //! You can even take just a subset of the distribution without ever spending time calculating the
@@ -61,46 +79,46 @@
 //!     println!("X: {}; Y: {}", point[0], point[1]);
 //! }
 //! ```
-//! 
+//!
 //! Higher-order Poisson disk distributions are generated just as easily:
 //! ```
 //! use fast_poisson::{Poisson, Poisson3D, Poisson4D};
-//! 
+//!
 //! // 3-dimensional distribution
 //! let points_3d = Poisson3D::new().iter();
-//! 
+//!
 //! // 4-dimensional distribution
 //! let mut points_4d = Poisson4D::new();
 //! // To achieve desired levels of performance, you should set a larger radius for
 //! // higher-order distributions
 //! points_4d.with_dimensions([1.0; 4], 0.2);
 //! let points_4d = points_4d.iter();
-//! 
+//!
 //! // For more than 4 dimensions, use `Poisson` directly:
 //! let mut points_7d = Poisson::<7>::new();
 //! points_7d.with_dimensions([1.0; 7], 0.6);
 //! let points_7d = points_7d.iter();
 //! ```
-//! 
+//!
 //! # Upgrading
-//! 
+//!
 //! ## 0.2.0
-//! 
+//!
 //! This version adds some breaking changes:
-//! 
+//!
 //! ### 2 dimensions no longer assumed
-//! 
+//!
 //! In version 0.1.0 you could directly instantiate `Poisson` and get a 2-dimensional distribution.
 //! Now you must specifiy that you want 2 dimensions using either `Poisson<2>` or [`Poisson2D`].
-//! 
+//!
 //! ### Returned points are arrays
-//! 
+//!
 //! In version 0.1.0 the distribution was returned as an iterator over `(f64, f64)` tuples
 //! representing each point. To leverage Rust's new const generics feature and support arbitrary
 //! dimensions, the N-dimensional points are now `[f64; N]` arrays.
-//! 
+//!
 //! ### Builder pattern
-//! 
+//!
 //! Use the build pattern to instantiate new distributions. This will not work:
 //! ```compile_fail
 //! # use fast_poisson::Poisson2D;
@@ -139,7 +157,7 @@ pub type Poisson3D = Poisson<3>;
 pub type Poisson4D = Poisson<4>;
 
 /// Poisson disk distribution in N dimensions
-/// 
+///
 /// Distributions can be generated for any non-negative number of dimensions, although performance
 /// depends upon the volume of the space: for higher-order dimensions you may need to [increase the
 /// radius](Poisson::with_dimensions) to achieve the desired level of performance.
@@ -260,6 +278,16 @@ impl<const N: usize> IntoIterator for Poisson<N> {
 
     fn into_iter(self) -> Self::IntoIter {
         PoissonIter::new(self)
+    }
+}
+
+/// For convenience allow converting to a Vec directly from Poisson
+impl<T, const N: usize> From<Poisson<N>> for Vec<T>
+where
+    T: From<[f64; N]>,
+{
+    fn from(poisson: Poisson<N>) -> Vec<T> {
+        poisson.iter().map(|point| point.into()).collect()
     }
 }
 
