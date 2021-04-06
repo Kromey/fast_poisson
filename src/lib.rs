@@ -293,7 +293,7 @@ impl<const N: usize> PoissonIter<N> {
 
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
-            None => Xoshiro256StarStar::from_rng(rand::thread_rng()).unwrap(),
+            None => Xoshiro256StarStar::from_entropy(),
             Some(seed) => Xoshiro256StarStar::seed_from_u64(seed),
         };
 
