@@ -102,6 +102,10 @@
 //!
 //! # Upgrading
 //!
+//! ## 0.3.x
+//!
+//! This version adds no breaking changes and is backwards-compatible with 0.2.0.
+//!
 //! ## 0.2.0
 //!
 //! This version adds some breaking changes:
@@ -212,10 +216,10 @@ impl<const N: usize> Poisson<N> {
         self
     }
 
-    /// Specify the RNG seed for this distribution
+    /// Specify the PRNG seed for this distribution
     ///
-    /// If no seed is specified then the internal RNG will be seeded from [`rand::thread_rng()`],
-    /// providing non-deterministic results.
+    /// If no seed is specified then the internal PRNG will be seeded from entropy, providing
+    /// non-deterministic results.
     ///
     /// ```
     /// # use fast_poisson::Poisson;
