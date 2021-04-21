@@ -43,7 +43,7 @@ jobs:
     needs: [rustfmt, clippy]
 
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.rust != stable }}
+    continue-on-error: ${{ matrix.rust != 'stable' }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
