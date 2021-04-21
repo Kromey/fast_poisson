@@ -1,29 +1,61 @@
-name: Build
+name: CI
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+  - cron: '30 5 * * 1' # 5:30 AM UTC on Mondays
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+  rustfmt:
+    name: Formatting
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install minimual stable
-      uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
         toolchain: stable
+        components: rustfmt
+    - run: cargo fmt --all -- --check
+  
+  clippy:
+    name: Clippy lints
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        components: clippy
+    - run: cargo clippy --all
+  
+  test:
+    name: Tests
+    needs: [rustfmt, clippy]
+
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.rust != stable }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        rust: [stable, beta, nightly]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install minimal ${{ matrix.rust }}
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
     - name: Build
       run: cargo build --verbose
     - name: Run tests
