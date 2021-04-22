@@ -18,6 +18,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-stable-cargo-${{ hashFiles('**/Cargo.toml') }}
     - uses: actions-rs/toolchain@v1
       with:
         profile: minimal
@@ -50,11 +57,14 @@ jobs:
     needs: [rustfmt, clippy]
 
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.rust != 'stable' }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [stable, beta, nightly]
+        rust:
+        - 1.51.0 # MSRV
+        - stable
+        - beta
+        - nightly
 
     steps:
     - uses: actions/checkout@v2
