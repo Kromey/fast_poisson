@@ -184,6 +184,7 @@ impl<const N: usize> Poisson<N> {
     /// Create a new Poisson disk distribution
     ///
     /// Currently the same as `Default::default()`
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -263,6 +264,7 @@ impl<const N: usize> Poisson<N> {
     /// for point in points.iter() {
     ///     println!("{:?}", point);
     /// }
+    #[must_use]
     pub fn iter(&self) -> PoissonIter<N> {
         PoissonIter::new(self.clone())
     }
@@ -372,7 +374,7 @@ impl<const N: usize> PoissonIter<N> {
 
     /// Convert a point into grid cell coordinates
     fn point_to_cell(&self, point: Point<N>) -> Cell<N> {
-        let mut cell = [0isize; N];
+        let mut cell = [0_isize; N];
 
         for i in 0..N {
             cell[i] = (point[i] / self.cell_size) as isize;
@@ -439,7 +441,7 @@ impl<const N: usize> PoissonIter<N> {
 
     /// Returns true if the cell is within the bounds of our grid.
     ///
-    /// This is true if 0 ≤ cell[i] ≤ ceiling(space[i] / cell_size)
+    /// This is true if 0 ≤ `cell[i]` ≤ `ceiling(space[i] / cell_size)`
     fn in_grid(&self, cell: Cell<N>) -> bool {
         cell.iter()
             .zip(self.distribution.dimensions.iter())
