@@ -11,7 +11,7 @@
 //!    O(N); with other libraries operations like mapping into another struct become O(N²) or more!
 //!  * Using Rust's const generics allows you to consume the distribution with no additional
 //!    dependencies
-//! 
+//!
 //! This library requires Rust 1.51.0 or later, as it relies on the const generics feature
 //! introduced in this version.
 //!
