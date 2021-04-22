@@ -268,6 +268,34 @@ impl<const N: usize> Poisson<N> {
     pub fn iter(&self) -> PoissonIter<N> {
         PoissonIter::new(self.clone())
     }
+
+    /// Generate the points in this Poisson distribution, collected into a [`Vec`](std::vec::Vec).
+    ///
+    /// Note that this method does *not* consume the `Poisson`, so you can call it multiple times
+    /// to generate multiple `Vec`s; if you have specified a seed, however, each one will be
+    /// identical, whereas they will each be unique if you have not.
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson2D;
+    /// let mut poisson = Poisson2D::new();
+    ///
+    /// let points1 = poisson.generate();
+    /// let points2 = poisson.generate();
+    ///
+    /// // These are not identical because no seed was specified
+    /// assert!(points1.iter().zip(points2.iter()).any(|(a, b)| a != b));
+    ///
+    /// poisson.with_seed(1337);
+    ///
+    /// let points3 = poisson.generate();
+    /// let points4 = poisson.generate();
+    ///
+    /// // These are identical because a seed was specified
+    /// assert!(points3.iter().zip(points4.iter()).all(|(a, b)| a == b));
+    /// ```
+    pub fn generate(&self) -> Vec<Point<N>> {
+        self.iter().collect()
+    }
 }
 
 impl<const N: usize> Default for Poisson<N> {
