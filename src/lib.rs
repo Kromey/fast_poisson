@@ -174,6 +174,7 @@ mod tests;
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use rand_xoshiro::Xoshiro256StarStar;
+use std::iter::FusedIterator;
 
 /// [`Poisson`] disk distribution in 2 dimensions
 pub type Poisson2D = Poisson<2>;
@@ -584,6 +585,8 @@ impl<const N: usize> Iterator for PoissonIter<N> {
         None
     }
 }
+
+impl<const N: usize> FusedIterator for PoissonIter<N> {}
 
 // Hacky way to include README in doc-tests, but works until #[doc(include...)] is stabilized
 // https://github.com/rust-lang/cargo/issues/383#issuecomment-720873790
