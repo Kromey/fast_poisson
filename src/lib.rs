@@ -22,9 +22,11 @@
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
-//! # #[cfg(not(feature = "f32"))]
+//! # // Some of these doctests look a little hairy because we have to accomodate for the feature
+//! # // `single_precision` which changes the type of the returned values.
+//! # #[cfg(not(feature = "single_precision"))]
 //! let points: Vec<[f64; 2]> = Vec::from(Poisson2D::new());
-//! # #[cfg(feature = "f32")]
+//! # #[cfg(feature = "single_precision")]
 //! # let points: Vec<[f32; 2]> = Vec::from(Poisson2D::new());
 //! ```
 //!
@@ -40,12 +42,12 @@
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
-//! # #[cfg(not(feature = "f32"))]
+//! # #[cfg(not(feature = "single_precision"))]
 //! struct Point {
 //!     x: f64,
 //!     y: f64,
 //! }
-//! # #[cfg(feature = "f32")]
+//! # #[cfg(feature = "single_precision")]
 //! # struct Point { x: f32, y: f32 }
 //!
 //! // Map the Poisson disk points to our `Point` struct in O(N) time!
@@ -56,12 +58,12 @@
 //! collect into a `Vec<Point>`:
 //! ```
 //! # use fast_poisson::Poisson2D;
-//! # #[cfg(not(feature = "f32"))]
+//! # #[cfg(not(feature = "single_precision"))]
 //! # struct Point { x: f64, y: f64 }
-//! # #[cfg(feature = "f32")]
+//! # #[cfg(feature = "single_precision")]
 //! # struct Point { x: f32, y: f32 }
 //!
-//! # #[cfg(not(feature = "f32"))]
+//! # #[cfg(not(feature = "single_precision"))]
 //! impl From<[f64; 2]> for Point {
 //!     fn from(point: [f64; 2]) -> Point {
 //!         Point {
@@ -70,7 +72,7 @@
 //!         }
 //!     }
 //! }
-//! # #[cfg(feature = "f32")]
+//! # #[cfg(feature = "single_precision")]
 //! # impl From<[f32; 2]> for Point {
 //! #     fn from(point: [f32; 2]) -> Point {
 //! #         Point {
@@ -183,9 +185,9 @@ pub type Poisson3D = Poisson<3>;
 /// [`Poisson`] disk distribution in 4 dimensions
 pub type Poisson4D = Poisson<4>;
 
-#[cfg(not(feature = "f32"))]
+#[cfg(not(feature = "single_precision"))]
 type Float = f64;
-#[cfg(feature = "f32")]
+#[cfg(feature = "single_precision")]
 type Float = f32;
 
 /// Poisson disk distribution in N dimensions

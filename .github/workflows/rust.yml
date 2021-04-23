@@ -65,7 +65,7 @@ jobs:
         - stable
         - beta
         - nightly
-        features: [default, f32]
+        features: [default, single_precision]
 
     steps:
     - uses: actions/checkout@v2

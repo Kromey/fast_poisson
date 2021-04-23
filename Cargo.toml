@@ -19,4 +19,4 @@ rand_distr = "0.4.0"
 
 [features]
 default = [] # Do-nothing feature for CI tests
-f32 = []
+single_precision = []
