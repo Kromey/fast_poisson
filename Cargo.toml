@@ -1,11 +1,11 @@
 [package]
 name = "fast_poisson"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
 edition = "2018"
 description = "An implementation of Bridson's algorithm for fast Poisson disk sampling"
 repository = "https://github.com/Kromey/fast_poisson"
-license-file = "LICENSE"
+license = "MIT OR Apache-2.0"
 keywords = ["poisson-disk", "bridson", "distribution", "sampling"]
 categories = ["algorithms"]
 exclude = ["/.github/*"]
@@ -18,6 +18,6 @@ rand_xoshiro = "0.6.0"
 rand_distr = "0.4.0"
 
 [features]
-default = [] # Do-nothing feature for CI tests
+default = [] # Provide an "empty" default feature for CI
 single_precision = []
 small_rng = []

@@ -1,3 +1,10 @@
+// Copyright 2021 Travis Veazey
+//
+// Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
+// https://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
+// https://opensource.org/licenses/MIT>, at your option. This file may not be
+// copied, modified, or distributed except according to those terms.
+
 //! Generate a Poisson disk distribution.
 //!
 //! This is an implementation of Bridson's ["Fast Poisson Disk Sampling"][Bridson] algorithm in
@@ -113,8 +120,8 @@
 //!
 //! // 4-dimensional distribution
 //! let mut points_4d = Poisson4D::new();
-//! // To achieve desired levels of performance, you should set a larger radius for
-//! // higher-order distributions
+//! // To achieve desired levels of performance, you should set a larger radius for higher-order
+//! // distributions
 //! points_4d.with_dimensions([1.0; 4], 0.2);
 //! let points_4d = points_4d.iter();
 //!
@@ -125,6 +132,11 @@
 //! ```
 //!
 //! # Upgrading
+//!
+//! ## 0.4.x
+//!
+//! This version is 100% backwards-compatible with 0.3.x and 0.2.0, however `fast_poisson` has been
+//! relicensed as of this version.
 //!
 //! ## 0.3.x
 //!
@@ -170,6 +182,7 @@
 //!
 //! [Bridson]: https://www.cct.lsu.edu/~fharhad/ganbatte/siggraph2007/CD2/content/sketches/0250.pdf
 //! [Tulleken]: http://devmag.org.za/2009/05/03/poisson-disk-sampling/
+
 #[cfg(test)]
 mod tests;
 
