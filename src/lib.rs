@@ -175,7 +175,6 @@ mod tests;
 
 use rand::prelude::*;
 use rand_distr::StandardNormal;
-use rand_xoshiro::Xoshiro256StarStar;
 use std::iter::FusedIterator;
 
 /// [`Poisson`] disk distribution in 2 dimensions
@@ -361,12 +360,17 @@ type Point<const N: usize> = [Float; N];
 /// A Cell is the grid coordinates containing a given point
 type Cell<const N: usize> = [isize; N];
 
+#[cfg(not(feature = "small_rng"))]
+type Rand = rand_xoshiro::Xoshiro256StarStar;
+#[cfg(feature = "small_rng")]
+type Rand = rand_xoshiro::Xoshiro128StarStar;
+
 /// An iterator over the points in the Poisson disk distribution
 pub struct PoissonIter<const N: usize> {
     /// The distribution from which this iterator was built
     distribution: Poisson<N>,
     /// The RNG
-    rng: Xoshiro256StarStar,
+    rng: Rand,
     /// The size of each cell in the grid
     cell_size: Float,
     /// The grid stores spatially-oriented samples for fast checking of neighboring sample points
@@ -385,8 +389,8 @@ impl<const N: usize> PoissonIter<N> {
 
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
-            None => Xoshiro256StarStar::from_entropy(),
-            Some(seed) => Xoshiro256StarStar::seed_from_u64(seed),
+            None => Rand::from_entropy(),
+            Some(seed) => Rand::seed_from_u64(seed),
         };
 
         // Calculate the amount of storage we'll need for our n-dimensional grid, which is stored
