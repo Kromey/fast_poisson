@@ -66,6 +66,19 @@ fn into_iter() {
 }
 
 #[test]
+fn cell_size() {
+    let poisson1 = Poisson::<1>::new().with_dimensions([1.0], 0.1).iter();
+    let poisson2 = Poisson::<2>::new().with_dimensions([1.0; 2], 0.1).iter();
+    let poisson3 = Poisson::<3>::new().with_dimensions([1.0; 3], 0.1).iter();
+    let poisson4 = Poisson::<4>::new().with_dimensions([1.0; 4], 0.1).iter();
+
+    assert_eq!(poisson1.cell_size, 0.1 / Float::from(1.0).sqrt());
+    assert_eq!(poisson2.cell_size, 0.1 / Float::from(2.0).sqrt());
+    assert_eq!(poisson3.cell_size, 0.1 / Float::from(3.0).sqrt());
+    assert_eq!(poisson4.cell_size, 0.1 / Float::from(4.0).sqrt());
+}
+
+#[test]
 fn n_dimensional_grid_size() {
     for n in 1..=3 {
         let mut poisson0 = Poisson::<0>::new();
@@ -89,7 +102,7 @@ fn n_dimensional_grid_size() {
         assert_eq!(iter0.grid.len(), 1);
         assert_eq!(
             iter1.grid.len(),
-            (n as Float / iter2.cell_size).ceil() as usize
+            (n as Float / iter1.cell_size).ceil() as usize
         );
         assert_eq!(
             iter2.grid.len(),
@@ -97,11 +110,11 @@ fn n_dimensional_grid_size() {
         );
         assert_eq!(
             iter3.grid.len(),
-            ((n as Float / iter2.cell_size).ceil() as usize).pow(3)
+            ((n as Float / iter3.cell_size).ceil() as usize).pow(3)
         );
         assert_eq!(
             iter4.grid.len(),
-            ((n as Float / iter2.cell_size).ceil() as usize).pow(4)
+            ((n as Float / iter4.cell_size).ceil() as usize).pow(4)
         );
     }
 }

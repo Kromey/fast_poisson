@@ -121,6 +121,10 @@
 //! This version is 100% backwards-compatible with 0.3.x and 0.2.0, however `fast_poisson` has been
 //! relicensed as of this version.
 //!
+//! A significant bug was however identified that impacts all distributions except 2-dimensional
+//! ones. As a result, non-2-dimensional distributions may produce different results in 0.4.0 than
+//! in previous versions, *even if the seed is the same*.
+//!
 //! ## 0.3.x
 //!
 //! This version adds no breaking changes and is backwards-compatible with 0.2.0.
@@ -386,7 +390,7 @@ impl<const N: usize> PoissonIter<N> {
     /// Create an iterator over the specified distribution
     fn new(distribution: Poisson<N>) -> Self {
         // We maintain a grid of our samples for faster radius checking
-        let cell_size = distribution.radius / (Float::from(2.0)).sqrt();
+        let cell_size = distribution.radius / (N as Float).sqrt();
 
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
