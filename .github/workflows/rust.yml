@@ -82,6 +82,6 @@ jobs:
         profile: minimal
         toolchain: ${{ matrix.rust }}
     - name: Build
-      run: cargo build --verbose --features "${{ matrix.features }}"
+      run: cargo build --verbose --features '${{ matrix.features }}'
     - name: Run tests
-      run: cargo test --verbose --features "${{ matrix.features }}"
+      run: cargo test --verbose --features '${{ matrix.features }}'
