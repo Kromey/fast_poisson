@@ -22,7 +22,10 @@
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
+//! # #[cfg(not(feature = "f32"))]
 //! let points: Vec<[f64; 2]> = Vec::from(Poisson2D::new());
+//! # #[cfg(feature = "f32")]
+//! # let points: Vec<[f32; 2]> = Vec::from(Poisson2D::new());
 //! ```
 //!
 //! To fill a box, specify the width and height:
@@ -37,10 +40,13 @@
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
+//! # #[cfg(not(feature = "f32"))]
 //! struct Point {
 //!     x: f64,
 //!     y: f64,
 //! }
+//! # #[cfg(feature = "f32")]
+//! # struct Point { x: f32, y: f32 }
 //!
 //! // Map the Poisson disk points to our `Point` struct in O(N) time!
 //! let points = Poisson2D::new().iter().map(|[x, y]| Point { x, y });
@@ -50,8 +56,12 @@
 //! collect into a `Vec<Point>`:
 //! ```
 //! # use fast_poisson::Poisson2D;
+//! # #[cfg(not(feature = "f32"))]
 //! # struct Point { x: f64, y: f64 }
+//! # #[cfg(feature = "f32")]
+//! # struct Point { x: f32, y: f32 }
 //!
+//! # #[cfg(not(feature = "f32"))]
 //! impl From<[f64; 2]> for Point {
 //!     fn from(point: [f64; 2]) -> Point {
 //!         Point {
@@ -60,6 +70,15 @@
 //!         }
 //!     }
 //! }
+//! # #[cfg(feature = "f32")]
+//! # impl From<[f32; 2]> for Point {
+//! #     fn from(point: [f32; 2]) -> Point {
+//! #         Point {
+//! #             x: point[0],
+//! #             y: point[1],
+//! #         }
+//! #     }
+//! # }
 //!
 //! // Could also be written using `.into()`
 //! let points: Vec<Point> = Vec::from(Poisson2D::new());
@@ -163,6 +182,11 @@ pub type Poisson3D = Poisson<3>;
 /// [`Poisson`] disk distribution in 4 dimensions
 pub type Poisson4D = Poisson<4>;
 
+#[cfg(not(feature = "f32"))]
+type Float = f64;
+#[cfg(feature = "f32")]
+type Float = f32;
+
 /// Poisson disk distribution in N dimensions
 ///
 /// Distributions can be generated for any non-negative number of dimensions, although performance
@@ -171,9 +195,9 @@ pub type Poisson4D = Poisson<4>;
 #[derive(Debug, Clone)]
 pub struct Poisson<const N: usize> {
     /// Dimensions of the box
-    dimensions: [f64; N],
+    dimensions: [Float; N],
     /// Radius around each point that must remain empty
-    radius: f64,
+    radius: Float,
     /// Seed to use for the internal RNG
     seed: Option<u64>,
     /// Number of samples to generate and test around each point
@@ -213,7 +237,7 @@ impl<const N: usize> Poisson<N> {
     ///     && p[2] >= 0.0 && p[2] < 5.0
     /// }));
     /// ```
-    pub fn with_dimensions(&mut self, dimensions: [f64; N], radius: f64) -> &mut Self {
+    pub fn with_dimensions(&mut self, dimensions: [Float; N], radius: Float) -> &mut Self {
         self.dimensions = dimensions;
         self.radius = radius;
 
@@ -321,15 +345,15 @@ impl<const N: usize> IntoIterator for Poisson<N> {
 /// For convenience allow converting to a Vec directly from Poisson
 impl<T, const N: usize> From<Poisson<N>> for Vec<T>
 where
-    T: From<[f64; N]>,
+    T: From<[Float; N]>,
 {
     fn from(poisson: Poisson<N>) -> Vec<T> {
         poisson.iter().map(|point| point.into()).collect()
     }
 }
 
-/// A Point is simply an array of f64 values
-type Point<const N: usize> = [f64; N];
+/// A Point is simply an array of Float values
+type Point<const N: usize> = [Float; N];
 
 /// A Cell is the grid coordinates containing a given point
 type Cell<const N: usize> = [isize; N];
@@ -341,7 +365,7 @@ pub struct PoissonIter<const N: usize> {
     /// The RNG
     rng: Xoshiro256StarStar,
     /// The size of each cell in the grid
-    cell_size: f64,
+    cell_size: Float,
     /// The grid stores spatially-oriented samples for fast checking of neighboring sample points
     grid: Vec<Option<Point<N>>>,
     /// A list of valid points that we have not yet visited
@@ -354,7 +378,7 @@ impl<const N: usize> PoissonIter<N> {
     /// Create an iterator over the specified distribution
     fn new(distribution: Poisson<N>) -> Self {
         // We maintain a grid of our samples for faster radius checking
-        let cell_size = distribution.radius / (2_f64).sqrt();
+        let cell_size = distribution.radius / (Float::from(2.0)).sqrt();
 
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
@@ -373,7 +397,7 @@ impl<const N: usize> PoissonIter<N> {
         // We have to generate an initial point, just to ensure we've got *something* in the active list
         let mut first_point = [0.0; N];
         for (i, dim) in first_point.iter_mut().zip(distribution.dimensions.iter()) {
-            *i = rng.gen::<f64>() * dim;
+            *i = rng.gen::<Float>() * dim;
         }
 
         let mut iter = PoissonIter {
@@ -434,15 +458,15 @@ impl<const N: usize> PoissonIter<N> {
         let mut point = self.current_sample.unwrap().0;
 
         // Pick a random distance away from our point
-        let dist = self.distribution.radius * (1.0 + self.rng.gen::<f64>());
+        let dist = self.distribution.radius * (1.0 + self.rng.gen::<Float>());
 
         // Generate a randomly distributed vector
-        let mut vector = [0_f64; N];
+        let mut vector: [Float; N] = [0.0; N];
         for i in vector.iter_mut() {
             *i = self.rng.sample(StandardNormal);
         }
         // Now find this new vector's magnitude
-        let mag = vector.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt();
+        let mag = vector.iter().map(|&x| x.powi(2)).sum::<Float>().sqrt();
 
         // Dividing each of the vector's components by `mag` will produce a unit vector; then by
         // multiplying each component by `dist`, we'll have a vector pointing `dist` away from the
@@ -508,7 +532,7 @@ impl<const N: usize> PoissonIter<N> {
                     .iter()
                     .zip(point2.iter())
                     .map(|(a, b)| (a - b).powi(2))
-                    .sum::<f64>();
+                    .sum::<Float>();
 
                 if neighbor_dist_squared < r_squared {
                     return true;

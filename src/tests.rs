@@ -18,7 +18,7 @@ fn unseeded_is_non_deterministic() {
 
     assert!(a
         .zip(b)
-        .any(|(a, b)| a[0] - b[0] > f64::EPSILON || a[1] - b[1] > f64::EPSILON));
+        .any(|(a, b)| a[0] - b[0] > Float::EPSILON || a[1] - b[1] > Float::EPSILON));
 }
 
 #[test]
@@ -68,10 +68,10 @@ fn n_dimensional_grid_size() {
         let mut poisson4 = Poisson::<4>::new();
 
         poisson0.dimensions = [];
-        poisson1.dimensions = [n as f64];
-        poisson2.dimensions = [n as f64; 2];
-        poisson3.dimensions = [n as f64; 3];
-        poisson4.dimensions = [n as f64; 4];
+        poisson1.dimensions = [n as Float];
+        poisson2.dimensions = [n as Float; 2];
+        poisson3.dimensions = [n as Float; 3];
+        poisson4.dimensions = [n as Float; 4];
 
         let iter0 = poisson0.iter();
         let iter1 = poisson1.iter();
@@ -82,19 +82,19 @@ fn n_dimensional_grid_size() {
         assert_eq!(iter0.grid.len(), 1);
         assert_eq!(
             iter1.grid.len(),
-            (n as f64 / iter2.cell_size).ceil() as usize
+            (n as Float / iter2.cell_size).ceil() as usize
         );
         assert_eq!(
             iter2.grid.len(),
-            ((n as f64 / iter2.cell_size).ceil() as usize).pow(2)
+            ((n as Float / iter2.cell_size).ceil() as usize).pow(2)
         );
         assert_eq!(
             iter3.grid.len(),
-            ((n as f64 / iter2.cell_size).ceil() as usize).pow(3)
+            ((n as Float / iter2.cell_size).ceil() as usize).pow(3)
         );
         assert_eq!(
             iter4.grid.len(),
-            ((n as f64 / iter2.cell_size).ceil() as usize).pow(4)
+            ((n as Float / iter2.cell_size).ceil() as usize).pow(4)
         );
     }
 }
@@ -204,7 +204,7 @@ fn point_generation_lies_within_radius() {
             .iter()
             .zip(initial.iter())
             .map(|(a, b)| (a - b).powi(2))
-            .sum::<f64>()
+            .sum::<Float>()
             .sqrt();
 
         assert!(r > iter.distribution.radius);
@@ -222,7 +222,7 @@ fn point_generation_lies_within_radius() {
             .iter()
             .zip(initial.iter())
             .map(|(a, b)| (a - b).powi(2))
-            .sum::<f64>()
+            .sum::<Float>()
             .sqrt();
 
         assert!(r > iter.distribution.radius);
@@ -315,5 +315,5 @@ fn out_of_bounds_point_is_not_neighbor() {
 fn into_vec() {
     let poisson = Poisson2D::new();
 
-    let _vec: Vec<[f64; 2]> = Vec::from(poisson);
+    let _vec: Vec<[Float; 2]> = Vec::from(poisson);
 }
