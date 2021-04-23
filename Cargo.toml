@@ -18,4 +18,5 @@ rand_xoshiro = "0.6.0"
 rand_distr = "0.4.0"
 
 [features]
+default = [] # Do-nothing feature for CI tests
 f32 = []
