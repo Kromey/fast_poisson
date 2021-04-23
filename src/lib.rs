@@ -16,11 +16,11 @@
 //!    O(N); with other libraries operations like mapping into another struct become O(N²) or more!
 //!  * Using Rust's const generics allows you to consume the distribution with no additional
 //!    dependencies
-//! 
+//!
 //! # Features
-//! 
+//!
 //! These are the optional features you can enable in your Cargo.toml:
-//! 
+//!
 //!  * `single_precision` changes the output, and all of the internal calculations, from using
 //!    double-precision `f64` to single-precision `f32`. (Note that the documentation assumes that
 //!    you are not using this feature and thus many examples show `f64` as the returned type.)
@@ -30,7 +30,7 @@
 //!    at the time of this writing, this is consistent with `rand`'s [`SmallRng`][small_rng] on
 //!    32-bit systems, whereas the default is consistent with `SmallRng` on 64-bit systems (with
 //!    the additional note that `SmallRng` use the `*PlusPlus` versions of these generators).
-//! 
+//!
 //! # Requirements
 //!
 //! This library requires Rust 1.51.0 or later, as it relies on [const generics] to return
@@ -39,31 +39,21 @@
 //!
 //! # Examples
 //!
-//! To generate a simple Poisson disk pattern in the range (0, 1] for each of the x and y
-//! dimensions:
 //! ```
 //! use fast_poisson::Poisson2D;
 //!
-//! # // Some of these doctests look a little hairy because we have to accomodate for the feature
-//! # // `single_precision` which changes the type of the returned values.
+//! // Easily generate a simple `Vec`
+//! # // Some of these examples look a little hairy because we have to accomodate for the feature
+//! # // `single_precision` in doctests, which changes the type of the returned values.
 //! # #[cfg(not(feature = "single_precision"))]
-//! let points: Vec<[f64; 2]> = Vec::from(Poisson2D::new());
+//! let points: Vec<[f64; 2]> = Poisson2D::new().generate();
 //! # #[cfg(feature = "single_precision")]
-//! # let points: Vec<[f32; 2]> = Vec::from(Poisson2D::new());
-//! ```
+//! # let points: Vec<[f32; 2]> = Poisson2D::new().generate();
 //!
-//! To fill a box, specify the width and height:
-//! ```
-//! use fast_poisson::Poisson2D;
-//!
+//! // To fill a box, specify the width and height:
 //! let points = Poisson2D::new().with_dimensions([100.0, 100.0], 5.0);
-//! ```
 //!
-//! You have full access to the power of Rust iterator methods to manipulate the distribution,
-//! and all within O(N) time because the points are lazily generated within each iteration:
-//! ```
-//! use fast_poisson::Poisson2D;
-//!
+//! // Leverage `Iterator::map` to quickly and easily convert into a custom type in O(N) time!
 //! # #[cfg(not(feature = "single_precision"))]
 //! struct Point {
 //!     x: f64,
@@ -71,20 +61,9 @@
 //! }
 //! # #[cfg(feature = "single_precision")]
 //! # struct Point { x: f32, y: f32 }
-//!
-//! // Map the Poisson disk points to our `Point` struct in O(N) time!
 //! let points = Poisson2D::new().iter().map(|[x, y]| Point { x, y });
-//! ```
 //!
-//! The previous example can also be written concisely to leverage the `From` trait if you want to
-//! collect into a `Vec<Point>`:
-//! ```
-//! # use fast_poisson::Poisson2D;
-//! # #[cfg(not(feature = "single_precision"))]
-//! # struct Point { x: f64, y: f64 }
-//! # #[cfg(feature = "single_precision")]
-//! # struct Point { x: f32, y: f32 }
-//!
+//! // With the `From` trait implemented for `Point`, we can directly convert into `Vec<Point>`
 //! # #[cfg(not(feature = "single_precision"))]
 //! impl From<[f64; 2]> for Point {
 //!     fn from(point: [f64; 2]) -> Point {
@@ -103,24 +82,13 @@
 //! #         }
 //! #     }
 //! # }
-//!
-//! // Could also be written using `.into()`
 //! let points: Vec<Point> = Vec::from(Poisson2D::new());
-//! ```
+//! let points: Vec<Point> = Poisson2D::new().into();
 //!
-//! You can even take just a subset of the distribution without ever spending time calculating the
-//! discarded points:
-//! ```
-//! use fast_poisson::Poisson2D;
-//!
-//! // Only 5 points from the distribution are actually generated!
+//! // Distributions are lazily evaluated; here only 5 points will be calculated!
 //! let points = Poisson2D::new().iter().take(5);
-//! ```
 //!
-//! `Poisson` implements [`IntoIterator`], so you can e.g. directly consume it with a `for` loop:
-//! ```
-//! use fast_poisson::Poisson2D;
-//!
+//! // `Poisson` can be directly consumed in for loops:
 //! for point in Poisson2D::new() {
 //!     println!("X: {}; Y: {}", point[0], point[1]);
 //! }
@@ -242,7 +210,7 @@ impl<const N: usize> Poisson<N> {
     /// By default, `Poisson` will sample each dimension from the semi-open range [0.0, 1.0), using
     /// a radius of 0.1 around each point, and taking 30 random samples around each; the resulting
     /// output will be non-deterministic, meaning it will be different each time.
-    /// 
+    ///
     /// See [`Poisson::with_dimensions`] to change the range and radius, [`Poisson::with_samples`]
     /// to change the number of random samples for each point, and [`Poisson::with_seed`] to produce
     /// deterministic, repeatable results.
@@ -295,7 +263,7 @@ impl<const N: usize> Poisson<N> {
     }
 
     /// Specify the number of samples to generate around each point in the distribution
-    /// 
+    ///
     /// Note that this is not specifying the number of samples in the resulting distribution, but
     /// rather sets the number of random points generated around each point; each is then checked
     /// for validity (i.e. ensuring it's within the bounds of the distribution and has no other
