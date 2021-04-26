@@ -22,14 +22,14 @@
 //! These are the optional features you can enable in your Cargo.toml:
 //!
 //!  * `single_precision` changes the output, and all of the internal calculations, from using
-//!    double-precision `f64` to single-precision `f32`. (Note that the documentation assumes that
-//!    you are not using this feature and thus many examples show `f64` as the returned type.)
+//!    double-precision `f64` to single-precision `f32`. Distributions generated with the
+//!    `single-precision` feature are *not* required nor expected to match those generated without
+//!    it.
 //!  * `small_rng` changes the internal PRNG used to generate the distribution: By default
 //!    [`Xoshiro256StarStar`](rand_xoshiro::Xoshiro256StarStar) is used, but with this feature
-//!    enabled then instead [`Xoshiro128StarStar`](rand_xoshiro::Xoshiro128StarStar) is used. Note
-//!    at the time of this writing, this is consistent with `rand`'s [`SmallRng`][small_rng] on
-//!    32-bit systems, whereas the default is consistent with `SmallRng` on 64-bit systems (with
-//!    the additional note that `SmallRng` use the `*PlusPlus` versions of these generators).
+//!    enabled then [`Xoshiro128StarStar`](rand_xoshiro::Xoshiro128StarStar) is used instead. This
+//!    reduces the memory used for the PRNG's state from 256 bits to 128 bits, and may be more
+//!    performant for 32-bit systems.
 //!
 //! # Requirements
 //!
@@ -121,9 +121,8 @@
 //! This version is 100% backwards-compatible with 0.3.x and 0.2.0, however `fast_poisson` has been
 //! relicensed as of this version.
 //!
-//! A significant bug was however identified that impacts all distributions except 2-dimensional
-//! ones. As a result, non-2-dimensional distributions may produce different results in 0.4.0 than
-//! in previous versions, *even if the seed is the same*.
+//! Several bugs were identified and fixed in the underlying algorithms; as a result, distributions
+//! generated with 0.4.0 will *not* match those generated in earlier versions.
 //!
 //! ## 0.3.x
 //!
@@ -217,7 +216,7 @@ impl<const N: usize> Poisson<N> {
     ///
     /// See [`Poisson::with_dimensions`] to change the range and radius, [`Poisson::with_samples`]
     /// to change the number of random samples for each point, and [`Poisson::with_seed`] to produce
-    /// deterministic, repeatable results.
+    /// repeatable results.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
