@@ -55,7 +55,11 @@ fn iter_does_not_consume() {
 
     for _point in poisson.iter() {}
 
+    for _point in &poisson {}
+
     for _point in poisson.iter() {}
+
+    for _point in &poisson {}
 }
 
 #[test]

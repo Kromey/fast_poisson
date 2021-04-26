@@ -349,6 +349,15 @@ impl<const N: usize> IntoIterator for Poisson<N> {
     }
 }
 
+impl<const N: usize> IntoIterator for &Poisson<N> {
+    type Item = Point<N>;
+    type IntoIter = PoissonIter<N>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 /// For convenience allow converting to a Vec directly from Poisson
 impl<T, const N: usize> From<Poisson<N>> for Vec<T>
 where
