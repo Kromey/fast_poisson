@@ -212,7 +212,7 @@ impl<const N: usize> Poisson<N> {
     /// Create a new Poisson disk distribution
     ///
     /// By default, `Poisson` will sample each dimension from the semi-open range [0.0, 1.0), using
-    /// a radius of 0.1 around each point, and taking 30 random samples around each; the resulting
+    /// a radius of 0.1 around each point, and up to 30 random samples around each; the resulting
     /// output will be non-deterministic, meaning it will be different each time.
     ///
     /// See [`Poisson::with_dimensions`] to change the range and radius, [`Poisson::with_samples`]
@@ -266,12 +266,11 @@ impl<const N: usize> Poisson<N> {
         self
     }
 
-    /// Specify the number of samples to generate around each point in the distribution
+    /// Specify the maximum samples to generate around each point
     ///
     /// Note that this is not specifying the number of samples in the resulting distribution, but
-    /// rather sets the number of random points generated around each point; each is then checked
-    /// for validity (i.e. ensuring it's within the bounds of the distribution and has no other
-    /// points within its radius), and only those that are valid are included.
+    /// rather sets the maximum number of attempts to find a new, valid point around an existing
+    /// point for each iteration of the algorithm.
     ///
     /// A higher number may result in better space filling, but may also slow down generation.
     ///
@@ -391,8 +390,6 @@ pub struct PoissonIter<const N: usize> {
     grid: Vec<Option<Point<N>>>,
     /// A list of valid points that we have not yet visited
     active: Vec<Point<N>>,
-    /// The current point we are visiting to generate and test surrounding points
-    current_sample: Option<(Point<N>, u32)>,
 }
 
 impl<const N: usize> PoissonIter<N> {
@@ -427,7 +424,6 @@ impl<const N: usize> PoissonIter<N> {
             cell_size,
             grid: vec![None; grid_size],
             active: Vec::new(),
-            current_sample: None,
         };
         // Don't forget to add our initial point
         iter.add_point(first_point);
@@ -471,13 +467,7 @@ impl<const N: usize> PoissonIter<N> {
     }
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
-    ///
-    /// # Panics
-    ///
-    /// Will panic if `current_sample` is None
-    fn generate_random_point(&mut self) -> Point<N> {
-        let mut point = self.current_sample.unwrap().0;
-
+    fn generate_random_point(&mut self, around: Point<N>) -> Point<N> {
         // Pick a random distance away from our point
         let dist = self.distribution.radius * (1.0 + self.rng.gen::<Float>());
 
@@ -494,9 +484,10 @@ impl<const N: usize> PoissonIter<N> {
         // origin. If we then add each of those components to our point, we'll have effectively
         // translated our point by `dist` in a randomly chosen direction.
         // Conveniently, we can do all of this in just one step!
+        let mut point = [0.0; N];
         let translate = dist / mag; // compute this just once!
         for i in 0..N {
-            point[i] += vector[i] * translate;
+            point[i] = around[i] + vector[i] * translate;
         }
 
         point
@@ -570,22 +561,12 @@ impl<const N: usize> Iterator for PoissonIter<N> {
     type Item = Point<N>;
 
     fn next(&mut self) -> Option<Point<N>> {
-        if self.current_sample == None && !self.active.is_empty() {
-            // Pop points off our active list until it's exhausted
-            let point = {
-                let i = self.rng.gen_range(0..self.active.len());
-                self.active.swap_remove(i)
-            };
-            self.current_sample = Some((point, 0));
-        }
+        while !self.active.is_empty() {
+            let i = self.rng.gen_range(0..self.active.len());
 
-        if let Some((point, mut i)) = self.current_sample {
-            while i < self.distribution.num_samples {
-                i += 1;
-                self.current_sample = Some((point, i));
-
+            for _ in 0..self.distribution.num_samples {
                 // Generate up to `num_samples` random points between radius and 2*radius from the current point
-                let point = self.generate_random_point();
+                let point = self.generate_random_point(self.active[i]);
 
                 // Ensure we've picked a point inside the bounds of our rectangle, and more than `radius`
                 // distance from any other sampled point
@@ -597,9 +578,7 @@ impl<const N: usize> Iterator for PoissonIter<N> {
                 }
             }
 
-            self.current_sample = None;
-
-            return self.next();
+            self.active.swap_remove(i);
         }
 
         None

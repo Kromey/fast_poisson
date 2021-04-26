@@ -208,21 +208,12 @@ fn adding_points() {
 }
 
 #[test]
-#[should_panic]
-fn point_generation_panics_with_no_point() {
-    let mut iter = Poisson::<2>::new().iter();
-
-    iter.generate_random_point();
-}
-
-#[test]
 fn point_generation_lies_within_radius() {
-    let mut iter = Poisson::<2>::new().iter();
-    iter.next(); // Ensures there is a current point
+    let mut iter = Poisson2D::new().iter();
+    let initial = [0.5; 2];
 
-    let (initial, _) = iter.current_sample.unwrap();
     for _ in 0..50 {
-        let point = iter.generate_random_point();
+        let point = iter.generate_random_point(initial);
 
         let r = point
             .iter()
@@ -235,12 +226,11 @@ fn point_generation_lies_within_radius() {
         assert!(r < iter.distribution.radius * 2.);
     }
 
-    let mut iter = Poisson::<3>::new().iter();
-    iter.next(); // Ensures there is a current point
+    let mut iter = Poisson3D::new().iter();
+    let initial = [0.5; 3];
 
-    let (initial, _) = iter.current_sample.unwrap();
     for _ in 0..50 {
-        let point = iter.generate_random_point();
+        let point = iter.generate_random_point(initial);
 
         let r = point
             .iter()
@@ -257,10 +247,9 @@ fn point_generation_lies_within_radius() {
 #[test]
 fn generate_random_point() {
     let mut iter = Poisson::<2>::new().iter();
-    iter.current_sample = Some(([0.5, 0.5], 0));
 
     for _ in 0..100 {
-        let [x, y] = iter.generate_random_point();
+        let [x, y] = iter.generate_random_point([0.5, 0.5]);
 
         assert!(0.0 <= x);
         assert!(1.0 > x);
