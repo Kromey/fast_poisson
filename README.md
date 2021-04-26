@@ -27,6 +27,8 @@ fn main() {
 }
 ```
 
+See [the documentation](https://docs.rs/fast_poisson/) for more.
+
 ## License
 
 Licensed under either of
