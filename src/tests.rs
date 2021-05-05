@@ -330,3 +330,29 @@ fn to_vec() {
 
     let _vec: Vec<[Float; 2]> = poisson.to_vec();
 }
+
+#[test]
+fn poisson_equality() {
+    let mut poisson = Poisson2D::new();
+
+    // No seed has been specified, so it's not equal to itself
+    assert_ne!(poisson, poisson);
+
+    let mut poisson2 = Poisson2D::new();
+
+    // No seed has been specified, so these are not equal
+    assert_ne!(poisson, poisson2);
+
+    poisson.with_seed(1337);
+    poisson2.with_seed(1337);
+
+    // Now with same seed, these are equal
+    assert_eq!(poisson, poisson);
+    assert_eq!(poisson2, poisson2);
+    assert_eq!(poisson, poisson2);
+
+    poisson2.with_dimensions([2.0, 3.0], 0.5);
+
+    // Different dimension, unequal again
+    assert_ne!(poisson, poisson2);
+}

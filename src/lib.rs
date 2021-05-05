@@ -350,6 +350,18 @@ impl<const N: usize> Poisson<N> {
     }
 }
 
+/// No object is equal, not even to itself, if the seed is unspecified
+impl<const N: usize> PartialEq for Poisson<N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.seed.is_some()
+            && other.seed.is_some()
+            && self.dimensions == other.dimensions
+            && self.radius == other.radius
+            && self.seed == other.seed
+            && self.num_samples == other.num_samples
+    }
+}
+
 impl<const N: usize> Default for Poisson<N> {
     fn default() -> Self {
         Poisson::<N> {
