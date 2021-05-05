@@ -54,6 +54,7 @@
 //! let points = Poisson2D::new().with_dimensions([100.0, 100.0], 5.0);
 //!
 //! // Leverage `Iterator::map` to quickly and easily convert into a custom type in O(N) time!
+//! // Also see the `Poisson::to_vec()` method
 //! # #[cfg(not(feature = "single_precision"))]
 //! struct Point {
 //!     x: f64,
@@ -62,28 +63,6 @@
 //! # #[cfg(feature = "single_precision")]
 //! # struct Point { x: f32, y: f32 }
 //! let points = Poisson2D::new().iter().map(|[x, y]| Point { x, y });
-//!
-//! // With the `From` trait implemented for `Point`, we can directly convert into `Vec<Point>`
-//! # #[cfg(not(feature = "single_precision"))]
-//! impl From<[f64; 2]> for Point {
-//!     fn from(point: [f64; 2]) -> Point {
-//!         Point {
-//!             x: point[0],
-//!             y: point[1],
-//!         }
-//!     }
-//! }
-//! # #[cfg(feature = "single_precision")]
-//! # impl From<[f32; 2]> for Point {
-//! #     fn from(point: [f32; 2]) -> Point {
-//! #         Point {
-//! #             x: point[0],
-//! #             y: point[1],
-//! #         }
-//! #     }
-//! # }
-//! let points: Vec<Point> = Vec::from(Poisson2D::new());
-//! let points: Vec<Point> = Poisson2D::new().into();
 //!
 //! // Distributions are lazily evaluated; here only 5 points will be calculated!
 //! let points = Poisson2D::new().iter().take(5);
@@ -325,6 +304,50 @@ impl<const N: usize> Poisson<N> {
     pub fn generate(&self) -> Vec<Point<N>> {
         self.iter().collect()
     }
+
+    /// Generate the points in the Poisson distribution, as a [`Vec<T>`](std::vec::Vec).
+    ///
+    /// This is a shortcut to translating the arrays normally generated into arbitrary types,
+    /// with the precondition that the type `T` must implement the `From` trait. This is otherwise
+    /// identical to the [`generate`][Poisson::generate] method.
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson2D;
+    /// # #[cfg(not(feature = "single_precision"))]
+    /// struct Point {
+    ///     x: f64,
+    ///     y: f64,
+    /// }
+    /// # #[cfg(feature = "single_precision")]
+    /// # struct Point { x: f32, y: f32 }
+    ///
+    /// # #[cfg(not(feature = "single_precision"))]
+    /// impl From<[f64; 2]> for Point {
+    ///     fn from(point: [f64; 2]) -> Point {
+    ///         Point {
+    ///             x: point[0],
+    ///             y: point[1],
+    ///         }
+    ///     }
+    /// }
+    /// # #[cfg(feature = "single_precision")]
+    /// # impl From<[f32; 2]> for Point {
+    /// #     fn from(point: [f32; 2]) -> Point {
+    /// #         Point {
+    /// #             x: point[0],
+    /// #             y: point[1],
+    /// #         }
+    /// #     }
+    /// # }
+    ///
+    /// let points: Vec<Point> = Poisson2D::new().to_vec();
+    /// ```
+    pub fn to_vec<T>(&self) -> Vec<T>
+    where
+        T: From<[Float; N]>,
+    {
+        self.iter().map(|point| point.into()).collect()
+    }
 }
 
 impl<const N: usize> Default for Poisson<N> {
@@ -362,7 +385,7 @@ where
     T: From<[Float; N]>,
 {
     fn from(poisson: Poisson<N>) -> Vec<T> {
-        poisson.iter().map(|point| point.into()).collect()
+        poisson.to_vec()
     }
 }
 

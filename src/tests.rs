@@ -325,8 +325,8 @@ fn out_of_bounds_point_is_not_neighbor() {
 }
 
 #[test]
-fn into_vec() {
+fn to_vec() {
     let poisson = Poisson2D::new();
 
-    let _vec: Vec<[Float; 2]> = Vec::from(poisson);
+    let _vec: Vec<[Float; 2]> = poisson.to_vec();
 }
