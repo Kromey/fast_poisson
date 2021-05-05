@@ -174,6 +174,13 @@ type Float = f32;
 /// Distributions can be generated for any non-negative number of dimensions, although performance
 /// depends upon the volume of the space: for higher-order dimensions you may need to [increase the
 /// radius](Poisson::with_dimensions) to achieve the desired level of performance.
+///
+/// # Equality
+///
+/// `Poisson` implements `PartialEq` but not `Eq`, because without a specified seed the output of
+/// even the same object will be different. That is, the equality of two `Poisson`s is based not on
+/// whether or not they were built with the same parameters, but rather on whether or not they will
+/// produce the same results once the distribution is generated.
 #[derive(Debug, Clone)]
 pub struct Poisson<const N: usize> {
     /// Dimensions of the box
