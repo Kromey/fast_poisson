@@ -150,6 +150,8 @@
 //! [const generics]: https://blog.rust-lang.org/2021/03/25/Rust-1.51.0.html#const-generics-mvp
 //! [small_rng]: https://docs.rs/rand/0.8.3/rand/rngs/struct.SmallRng.html
 
+#[cfg(feature = "derive_serde")]
+use serde::{Deserialize, Serialize};
 #[cfg(test)]
 mod tests;
 
@@ -181,8 +183,10 @@ type Float = f32;
 /// whether or not they were built with the same parameters, but rather on whether or not they will
 /// produce the same results once the distribution is generated.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "derive_serde", derive(Serialize, Deserialize))]
 pub struct Poisson<const N: usize> {
     /// Dimensions of the box
+    #[cfg_attr(feature = "derive_serde", serde(with = "serde_arrays"))]
     dimensions: [Float; N],
     /// Radius around each point that must remain empty
     radius: Float,
