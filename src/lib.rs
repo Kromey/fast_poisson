@@ -30,6 +30,9 @@
 //!    enabled then [`Xoshiro128StarStar`](rand_xoshiro::Xoshiro128StarStar) is used instead. This
 //!    reduces the memory used for the PRNG's state from 256 bits to 128 bits, and may be more
 //!    performant for 32-bit systems.
+//!  * `derive_serde` automatically derives Serde's Serialize and Deserialize traits for `Poisson`,
+//!    This relies on the [`serde_arrays`][sa] crate to allow (de)serializing the const generic arrays
+//!    used by `Poisson`.
 //!
 //! # Requirements
 //!
@@ -149,6 +152,7 @@
 //! [Tulleken]: http://devmag.org.za/2009/05/03/poisson-disk-sampling/
 //! [const generics]: https://blog.rust-lang.org/2021/03/25/Rust-1.51.0.html#const-generics-mvp
 //! [small_rng]: https://docs.rs/rand/0.8.3/rand/rngs/struct.SmallRng.html
+//! [sa]: https://crates.io/crates/serde_arrays
 
 #[cfg(feature = "derive_serde")]
 use serde::{Deserialize, Serialize};
