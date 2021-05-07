@@ -65,7 +65,7 @@ jobs:
         - stable
         - beta
         - nightly
-        features: [default, single_precision, small_rng, "single_precision,small_rng"]
+        features: [default, single_precision, small_rng, "single_precision,small_rng", derive_serde]
 
     steps:
     - uses: actions/checkout@v2
