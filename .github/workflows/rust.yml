@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
     - uses: actions/cache@v2.1.7
       with:
         path: |
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
     - uses: actions/cache@v2.1.7
       with:
         path: |
@@ -68,7 +68,7 @@ jobs:
         features: [default, single_precision, small_rng, "single_precision,small_rng", derive_serde]
 
     steps:
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
     - uses: actions/cache@v2.1.7
       with:
         path: |
