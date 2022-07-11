@@ -19,6 +19,15 @@ fn new_is_default() {
 }
 
 #[test]
+fn builder_pattern() {
+    let _points = Poisson2D::new()
+        .with_dimensions([10.0, 10.0], 2.0)
+        .with_seed(0xBADBEEF)
+        .with_samples(30)
+        .generate();
+}
+
+#[test]
 fn unseeded_is_non_deterministic() {
     let a = Poisson::<2>::new().iter();
     let b = Poisson::<2>::new().iter();
