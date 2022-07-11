@@ -9,8 +9,8 @@ use super::*;
 
 #[test]
 fn new_is_default() {
-    let new = Poisson::<2>::new();
-    let default: Poisson<2> = Default::default();
+    let new = Poisson2D::new();
+    let default = Poisson2D::default();
 
     assert_eq!(new.dimensions, default.dimensions);
     assert_eq!(new.radius, default.radius);
@@ -29,8 +29,8 @@ fn builder_pattern() {
 
 #[test]
 fn unseeded_is_non_deterministic() {
-    let a = Poisson::<2>::new().iter();
-    let b = Poisson::<2>::new().iter();
+    let a = Poisson2D::new().iter();
+    let b = Poisson2D::new().iter();
 
     assert!(a
         .zip(b)
