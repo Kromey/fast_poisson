@@ -252,7 +252,7 @@ impl<const N: usize> Poisson<N> {
     /// # use fast_poisson::Poisson2D;
     /// let points = Poisson2D::new().with_seed(0xBADBEEF).iter();
     /// ```
-    pub fn with_seed(&mut self, seed: u64) -> &Self {
+    pub fn with_seed(&mut self, seed: u64) -> &mut Self {
         self.seed = Some(seed);
 
         self
@@ -270,7 +270,7 @@ impl<const N: usize> Poisson<N> {
     /// # use fast_poisson::Poisson3D;
     /// let points = Poisson3D::new().with_samples(40).iter();
     /// ```
-    pub fn with_samples(&mut self, samples: u32) -> &Self {
+    pub fn with_samples(&mut self, samples: u32) -> &mut Self {
         self.num_samples = samples;
 
         self
