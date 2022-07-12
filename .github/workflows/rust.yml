@@ -30,6 +30,7 @@ jobs:
         profile: minimal
         toolchain: stable
         components: rustfmt
+        override: true
     - run: cargo fmt --all -- --check
   
   clippy:
@@ -50,6 +51,7 @@ jobs:
         profile: minimal
         toolchain: stable
         components: clippy
+        override: true
     - run: cargo clippy --all
   
   test:
@@ -81,6 +83,7 @@ jobs:
       with:
         profile: minimal
         toolchain: ${{ matrix.rust }}
+        override: true
     - name: Build
       run: cargo build --verbose --features "${{ matrix.features }}"
     - name: Run tests
