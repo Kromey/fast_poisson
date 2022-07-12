@@ -1,8 +1,8 @@
 [package]
 name = "fast_poisson"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
-edition = "2021"
+edition = "2018"
 description = "An implementation of Bridson's algorithm for fast Poisson disk sampling"
 repository = "https://github.com/Kromey/fast_poisson"
 license = "MIT OR Apache-2.0"
