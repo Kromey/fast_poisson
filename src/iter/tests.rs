@@ -15,10 +15,16 @@ fn cell_size() {
     let poisson3 = Poisson::<3>::new().with_dimensions([1.0; 3], 0.1).iter();
     let poisson4 = Poisson::<4>::new().with_dimensions([1.0; 4], 0.1).iter();
 
-    assert_eq!(poisson1.cell_size, 0.1 / Float::from(1.0).sqrt());
-    assert_eq!(poisson2.cell_size, 0.1 / Float::from(2.0).sqrt());
-    assert_eq!(poisson3.cell_size, 0.1 / Float::from(3.0).sqrt());
-    assert_eq!(poisson4.cell_size, 0.1 / Float::from(4.0).sqrt());
+    {
+        // This "useless conversion" ensures our test runs properly whether we're
+        // using f64 or f32 per our Cargo features selection
+        #![allow(clippy::useless_conversion)]
+        
+        assert_eq!(poisson1.cell_size, 0.1 / Float::from(1.0).sqrt());
+        assert_eq!(poisson2.cell_size, 0.1 / Float::from(2.0).sqrt());
+        assert_eq!(poisson3.cell_size, 0.1 / Float::from(3.0).sqrt());
+        assert_eq!(poisson4.cell_size, 0.1 / Float::from(4.0).sqrt());
+    }
 }
 
 #[test]
