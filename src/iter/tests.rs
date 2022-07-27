@@ -19,7 +19,7 @@ fn cell_size() {
         // This "useless conversion" ensures our test runs properly whether we're
         // using f64 or f32 per our Cargo features selection
         #![allow(clippy::useless_conversion)]
-        
+
         assert_eq!(poisson1.cell_size, 0.1 / Float::from(1.0).sqrt());
         assert_eq!(poisson2.cell_size, 0.1 / Float::from(2.0).sqrt());
         assert_eq!(poisson3.cell_size, 0.1 / Float::from(3.0).sqrt());
@@ -134,7 +134,7 @@ fn sample_to_grid() {
         let idx = iter.point_to_idx(point);
 
         // Trying to access this will panic if it's out of bound in any way
-        // TODO: Should do more robust testing of the results
+        // TODO: #25 Should do more robust testing of the results
         let _ = iter.grid[idx];
     }
 }
