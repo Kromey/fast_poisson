@@ -17,20 +17,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3.0.2
-    - uses: actions/cache@v3.0.8
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
           target
         key: ${{ runner.os }}-stable-cargo-${{ hashFiles('**/Cargo.toml') }}
-    - uses: actions-rs/toolchain@v1.0.7
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        profile: minimal
-        toolchain: stable
         components: rustfmt
-        override: true
     - run: cargo fmt --all -- --check
   
   clippy:
@@ -38,20 +35,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3.0.2
-    - uses: actions/cache@v3.0.8
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
           target
         key: ${{ runner.os }}-stable-cargo-${{ hashFiles('**/Cargo.toml') }}
-    - uses: actions-rs/toolchain@v1.0.7
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        profile: minimal
-        toolchain: stable
         components: clippy
-        override: true
     - run: cargo clippy --all
   
   test:
@@ -66,12 +60,22 @@ jobs:
         - 1.51.0 # MSRV
         - stable
         - beta
-        - nightly
-        features: [default, single_precision, small_rng, "single_precision,small_rng", derive_serde]
+        features:
+        - default
+        - single_precision
+        - small_rng
+        - "single_precision,small_rng"
+        - derive_serde
+        exclude:
+        - os: macOS-latest # MacOS 12 doesn't compile with Rust 1.51
+          rust: 1.51.0
+        include:
+        - os: macOS-11
+          rust: 1.51.0
 
     steps:
-    - uses: actions/checkout@v3.0.2
-    - uses: actions/cache@v3.0.8
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/registry
@@ -79,11 +83,9 @@ jobs:
           target
         key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.toml') }}
     - name: Install minimal ${{ matrix.rust }}
-      uses: actions-rs/toolchain@v1.0.7
+      uses: dtolnay/rust-toolchain@stable
       with:
-        profile: minimal
         toolchain: ${{ matrix.rust }}
-        override: true
     - name: Build
       run: cargo build --verbose --features "${{ matrix.features }}"
     - name: Run tests
