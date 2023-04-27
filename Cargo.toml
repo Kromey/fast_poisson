@@ -28,3 +28,4 @@ derive_serde = ["serde", "serde_arrays"]
 
 [dev-dependencies]
 serde_json = "1.0"
+rayon = "1.7"
