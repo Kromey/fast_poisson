@@ -169,7 +169,7 @@ impl<const N: usize> Iter<N> {
             let mut neighbor = cell;
 
             // We can add our current iteration count to visit each neighbor cell
-            for i in (&mut neighbor).iter_mut() {
+            for i in neighbor.iter_mut() {
                 // We clamp our addition to the range [-2, 2] for each cell
                 *i += carry % 5 - 2;
                 // Since we modulo by 5 to get the right range, integer division by 5 "advances" us
