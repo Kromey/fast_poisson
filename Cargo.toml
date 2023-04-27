@@ -13,6 +13,7 @@ exclude = ["/.github/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+kiddo = "2.0.1"
 rand = "0.8.4"
 rand_xoshiro = "0.6.0"
 rand_distr = "0.4.0"
@@ -27,3 +28,4 @@ derive_serde = ["serde", "serde_arrays"]
 
 [dev-dependencies]
 serde_json = "1.0"
+rayon = "1.7"
