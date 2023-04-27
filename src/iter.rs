@@ -6,6 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use super::{Float, Poisson};
+use kiddo::{KdTree, float::distance::squared_euclidean};
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use std::iter::FusedIterator;
@@ -15,9 +16,6 @@ mod tests;
 
 /// A Point is simply an array of Float values
 pub type Point<const N: usize> = [Float; N];
-
-/// A Cell is the grid coordinates containing a given point
-type Cell<const N: usize> = [isize; N];
 
 #[cfg(not(feature = "small_rng"))]
 type Rand = rand_xoshiro::Xoshiro256StarStar;
@@ -30,10 +28,8 @@ pub struct Iter<const N: usize> {
     distribution: Poisson<N>,
     /// The RNG
     rng: Rand,
-    /// The size of each cell in the grid
-    cell_size: Float,
-    /// The grid stores spatially-oriented samples for fast checking of neighboring sample points
-    grid: Vec<Option<Point<N>>>,
+    /// All previously-selected samples, to ensure new samples maintain minimum radius
+    sampled: KdTree<Float, N>,
     /// A list of valid points that we have not yet visited
     active: Vec<Point<N>>,
 }
@@ -41,22 +37,11 @@ pub struct Iter<const N: usize> {
 impl<const N: usize> Iter<N> {
     /// Create an iterator over the specified distribution
     pub(crate) fn new(distribution: Poisson<N>) -> Self {
-        // We maintain a grid of our samples for faster radius checking
-        let cell_size = distribution.radius / (N as Float).sqrt();
-
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
             None => Rand::from_entropy(),
             Some(seed) => Rand::seed_from_u64(seed),
         };
-
-        // Calculate the amount of storage we'll need for our n-dimensional grid, which is stored
-        // as a single-dimensional array.
-        let grid_size: usize = distribution
-            .dimensions
-            .iter()
-            .map(|n| (n / cell_size).ceil() as usize)
-            .product();
 
         // We have to generate an initial point, just to ensure we've got *something* in the active list
         let mut first_point = [0.0; N];
@@ -67,8 +52,7 @@ impl<const N: usize> Iter<N> {
         let mut iter = Iter {
             distribution,
             rng,
-            cell_size,
-            grid: vec![None; grid_size],
+            sampled: KdTree::new(),
             active: Vec::new(),
         };
         // Don't forget to add our initial point
@@ -82,34 +66,8 @@ impl<const N: usize> Iter<N> {
         // Add it to the active list
         self.active.push(point);
 
-        // Now stash this point in our grid
-        let idx = self.point_to_idx(point);
-        self.grid[idx] = Some(point);
-    }
-
-    /// Convert a point into grid cell coordinates
-    fn point_to_cell(&self, point: Point<N>) -> Cell<N> {
-        let mut cell = [0_isize; N];
-
-        for i in 0..N {
-            cell[i] = (point[i] / self.cell_size) as isize;
-        }
-
-        cell
-    }
-
-    /// Convert a cell into a grid vector index
-    fn cell_to_idx(&self, cell: Cell<N>) -> usize {
-        cell.iter()
-            .zip(self.distribution.dimensions.iter())
-            .fold(0, |acc, (pn, dn)| {
-                acc * (dn / self.cell_size) as usize + *pn as usize
-            })
-    }
-
-    /// Convert a point into a grid vector index
-    fn point_to_idx(&self, point: Point<N>) -> usize {
-        self.cell_to_idx(self.point_to_cell(point))
+        // Now stash this point in our samples
+        self.sampled.add(&point, 0);
     }
 
     /// Generate a random point between `radius` and `2 * radius` away from the given point
@@ -149,57 +107,9 @@ impl<const N: usize> Iter<N> {
             .all(|(p, d)| *p >= 0. && p < d)
     }
 
-    /// Returns true if the cell is within the bounds of our grid.
-    ///
-    /// This is true if 0 ≤ `cell[i]` ≤ `ceiling(space[i] / cell_size)`
-    fn in_grid(&self, cell: Cell<N>) -> bool {
-        cell.iter()
-            .zip(self.distribution.dimensions.iter())
-            .all(|(c, d)| *c >= 0 && *c < (*d / self.cell_size).ceil() as isize)
-    }
-
     /// Returns true if there is at least one other sample point within `radius` of this point
     fn in_neighborhood(&self, point: Point<N>) -> bool {
-        let cell = self.point_to_cell(point);
-
-        // We'll compare to distance squared, so we can skip the square root operation for better performance
-        let r_squared = self.distribution.radius.powi(2);
-
-        for mut carry in 0.. {
-            let mut neighbor = cell;
-
-            // We can add our current iteration count to visit each neighbor cell
-            for i in neighbor.iter_mut() {
-                // We clamp our addition to the range [-2, 2] for each cell
-                *i += carry % 5 - 2;
-                // Since we modulo by 5 to get the right range, integer division by 5 "advances" us
-                carry /= 5;
-            }
-
-            if carry > 0 {
-                // If we've "overflowed" then we've already tested every neighbor cell
-                return false;
-            }
-            if !self.in_grid(neighbor) {
-                // Skip anything beyond the bounds of our grid
-                continue;
-            }
-
-            if let Some(point2) = self.grid[self.cell_to_idx(neighbor)] {
-                let neighbor_dist_squared = point
-                    .iter()
-                    .zip(point2.iter())
-                    .map(|(a, b)| (a - b).powi(2))
-                    .sum::<Float>();
-
-                if neighbor_dist_squared < r_squared {
-                    return true;
-                }
-            }
-        }
-
-        // Rust can't tell the previous loop will always reach one of the `return` statements...
-        false
+        !self.sampled.within(&point, self.distribution.radius.powi(2), &squared_euclidean).is_empty()
     }
 }
 
