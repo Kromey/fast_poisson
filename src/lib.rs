@@ -94,7 +94,7 @@
 //!
 //! ## 0.6.x
 //!
-//! *This version raises the MSRV from 1.51 to 1.61.*
+//! *This version raises the MSRV from 1.51 to 1.67.*
 //!
 //! This version fixes several bugs found in earlier versions, most notably some results not properly
 //! respecting the `radius` parameter, and generating empty results in rare cases. Usage remains the
