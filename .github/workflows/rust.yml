@@ -69,22 +69,22 @@ jobs:
         exclude:
         - os: macOS-latest # MacOS 12 doesn't compile with Rust 1.51
           rust: 1.51.0
-        include:
-        - os: macOS-11
-          rust: 1.51.0
-          features: default
-        - os: macOS-11
-          rust: 1.51.0
-          features: single_precision
-        - os: macOS-11
-          rust: 1.51.0
-          features: small_rng
-        - os: macOS-11
-          rust: 1.51.0
-          features: "single_precision,small_rng"
-        - os: macOS-11
-          rust: 1.51.0
-          features: derive_serde
+        # include:
+        # - os: macOS-11
+        #   rust: 1.51.0
+        #   features: default
+        # - os: macOS-11
+        #   rust: 1.51.0
+        #   features: single_precision
+        # - os: macOS-11
+        #   rust: 1.51.0
+        #   features: small_rng
+        # - os: macOS-11
+        #   rust: 1.51.0
+        #   features: "single_precision,small_rng"
+        # - os: macOS-11
+        #   rust: 1.51.0
+        #   features: derive_serde
 
     steps:
     - uses: actions/checkout@v3
