@@ -6,7 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use super::{Float, Poisson};
-use kiddo::{KdTree, float::distance::squared_euclidean};
+use kiddo::{float::distance::squared_euclidean, KdTree};
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use std::iter::FusedIterator;
@@ -46,7 +46,10 @@ impl<const N: usize> Iter<N> {
         // We have to generate an initial point, just to ensure we've got *something* in the active list
         let mut first_point = [0.0; N];
         for (i, dim) in first_point.iter_mut().zip(distribution.dimensions.iter()) {
-            *i = rng.gen::<Float>() * dim;
+            // Start somewhere near the middle, but still randomly distributed
+            // Fixes #34 by avoiding cases where we start near an edge/corner and happen to only generate
+            // samples outside of our boundaries (because we only have ~25% chance of picking one inside)
+            *i = (1.5 - rng.gen::<Float>()) * dim / 2.0;
         }
 
         let mut iter = Iter {
@@ -109,7 +112,10 @@ impl<const N: usize> Iter<N> {
 
     /// Returns true if there is at least one other sample point within `radius` of this point
     fn in_neighborhood(&self, point: Point<N>) -> bool {
-        !self.sampled.within(&point, self.distribution.radius.powi(2), &squared_euclidean).is_empty()
+        !self
+            .sampled
+            .within(&point, self.distribution.radius.powi(2), &squared_euclidean)
+            .is_empty()
     }
 }
 
