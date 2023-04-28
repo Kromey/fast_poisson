@@ -24,6 +24,22 @@ fn adding_points() {
 }
 
 #[test]
+fn initial_point_not_excluded() {
+    for seed in 0..50 {
+        let mut iter = Poisson2D::new().with_seed(seed).iter();
+        let first_point = iter.active[0];
+        let radius = iter.distribution.radius.powi(2); // Square for performance
+        if iter.any(|p| {
+            (p[0] - first_point[0]).powi(2) + (p[1] - first_point[1]).powi(2) < radius
+        }) {
+            return;
+        }
+    }
+
+    panic!("Initial point is only found within a void in this distribution");
+}
+
+#[test]
 fn point_generation_lies_within_radius() {
     let mut iter = Poisson2D::new().iter();
     let initial = [0.5; 2];

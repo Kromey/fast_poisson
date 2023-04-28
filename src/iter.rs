@@ -52,16 +52,15 @@ impl<const N: usize> Iter<N> {
             *i = (1.5 - rng.gen::<Float>()) * dim / 2.0;
         }
 
-        let mut iter = Iter {
+        Iter {
             distribution,
             rng,
             sampled: KdTree::new(),
-            active: Vec::new(),
-        };
-        // Don't forget to add our initial point
-        iter.add_point(first_point);
-
-        iter
+            // Add our initial point to `active`, to give us somewhere to start, but don't add it to
+            // `sampled` since this initial point never gets returned, creating a void in the output.
+            // See #36
+            active: vec![first_point],
+        }
     }
 
     /// Add a point to our pattern
