@@ -2,7 +2,7 @@
 name = "fast_poisson"
 version = "0.6.0"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
-rust-version = "1.59"
+rust-version = "1.61"
 edition = "2021"
 description = "An implementation of Bridson's algorithm for fast Poisson disk sampling"
 repository = "https://github.com/Kromey/fast_poisson"

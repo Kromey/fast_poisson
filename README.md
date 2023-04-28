@@ -28,7 +28,7 @@ See [the documentation](https://docs.rs/fast_poisson/) for more.
 
 ## MSRV
 
-`fast_poisson` is tested and supported for Rust version 1.59 or later.
+`fast_poisson` is tested and supported for Rust version 1.61 or later.
 
 ## License
 
