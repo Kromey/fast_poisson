@@ -91,8 +91,31 @@
 //! *This version raises the MSRV from 1.51 to 1.67.*
 //!
 //! This version fixes several bugs found in earlier versions, and removes the `small_rng` feature
-//! flag; see [`Poisson`] for details on what to use instead. Usage is otherwise the same as 0.5.x
-//! and 0.4.x.
+//! flag; see [`Poisson`] for details on what to use instead.
+//! 
+//! The builder pattern methods have been changed and now directly consume the `Poisson`. This means
+//! that this will no longer work:
+//! ```compile_fail
+//! # use fast_poisson::Poisson2D;
+//! let mut poisson = Poisson2D::new();
+//! poisson.with_seed(0x5ADBEEF);
+//! // This line will fail with "borrow of moved value"
+//! let points = poisson.generate();
+//! ```
+//! Instead use either of these approaches:
+//! ```
+//! # use fast_poisson::Poisson2D;
+//! // Builder pattern
+//! let builder = Poisson2D::new().with_seed(0xCAFEF00D);
+//! let points = builder.generate();
+//! 
+//! // New `set_*` methods
+//! let mut setters = Poisson2D::new();
+//! setters.set_seed(0xCAFEF00D);
+//! let points2 = setters.generate();
+//! 
+//! assert_eq!(points, points2);
+//! ```
 //!
 //! Due to internal changes, distributions are expected **not** to match those generated in earlier
 //! versions, even with identical seeds used.
