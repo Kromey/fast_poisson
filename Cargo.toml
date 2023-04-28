@@ -24,7 +24,6 @@ serde_arrays = { version = "0.1.0", optional = true }
 [features]
 default = [] # Provide an "empty" default feature for CI
 single_precision = []
-small_rng = []
 derive_serde = ["serde", "serde_arrays"]
 
 [dev-dependencies]

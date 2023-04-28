@@ -63,8 +63,6 @@ jobs:
         features:
         - default
         - single_precision
-        - small_rng
-        - "single_precision,small_rng"
         - derive_serde
 
     steps:

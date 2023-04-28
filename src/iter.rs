@@ -5,6 +5,8 @@
 // https://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use crate::Rand;
+
 use super::{Float, Poisson};
 use kiddo::{float::distance::squared_euclidean, KdTree};
 use rand::prelude::*;
@@ -17,30 +19,31 @@ mod tests;
 /// A Point is simply an array of Float values
 pub type Point<const N: usize> = [Float; N];
 
-#[cfg(not(feature = "small_rng"))]
-type Rand = rand_xoshiro::Xoshiro256StarStar;
-#[cfg(feature = "small_rng")]
-type Rand = rand_xoshiro::Xoshiro128StarStar;
-
 /// An iterator over the points in the Poisson disk distribution
-pub struct Iter<const N: usize> {
+pub struct Iter<const N: usize, R = Rand>
+where
+    R: Rng + SeedableRng,
+{
     /// The distribution from which this iterator was built
-    distribution: Poisson<N>,
+    distribution: Poisson<N, R>,
     /// The RNG
-    rng: Rand,
+    rng: R,
     /// All previously-selected samples, to ensure new samples maintain minimum radius
     sampled: KdTree<Float, N>,
     /// A list of valid points that we have not yet visited
     active: Vec<Point<N>>,
 }
 
-impl<const N: usize> Iter<N> {
+impl<const N: usize, R> Iter<N, R>
+where
+    R: Rng + SeedableRng,
+{
     /// Create an iterator over the specified distribution
-    pub(crate) fn new(distribution: Poisson<N>) -> Self {
+    pub(crate) fn new(distribution: Poisson<N, R>) -> Self {
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
-            None => Rand::from_entropy(),
-            Some(seed) => Rand::seed_from_u64(seed),
+            None => R::from_entropy(),
+            Some(seed) => R::seed_from_u64(seed),
         };
 
         // We have to generate an initial point, just to ensure we've got *something* in the active list
@@ -118,7 +121,10 @@ impl<const N: usize> Iter<N> {
     }
 }
 
-impl<const N: usize> Iterator for Iter<N> {
+impl<const N: usize, R> Iterator for Iter<N, R>
+where
+    R: Rng + SeedableRng,
+{
     type Item = Point<N>;
 
     fn next(&mut self) -> Option<Point<N>> {

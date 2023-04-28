@@ -23,14 +23,9 @@
 //!
 //!  * `single_precision` changes the output, and all of the internal calculations, from using
 //!    double-precision `f64` to single-precision `f32`. Distributions generated with the
-//!    `single-precision` feature are *not* required nor expected to match those generated without
-//!    it.
-//!  * `small_rng` changes the internal PRNG used to generate the distribution: By default
-//!    [`Xoshiro256StarStar`](rand_xoshiro::Xoshiro256StarStar) is used, but with this feature
-//!    enabled then [`Xoshiro128StarStar`](rand_xoshiro::Xoshiro128StarStar) is used instead. This
-//!    reduces the memory used for the PRNG's state from 256 bits to 128 bits, and may be more
-//!    performant for 32-bit systems.
-//!  * `derive_serde` automatically derives Serde's Serialize and Deserialize traits for `Poisson`,
+//!    `single_precision` feature are *not* required nor expected to match those generated without
+//!    it. This also changes the default PRNG; see [`Poisson`] for details.
+//!  * `derive_serde` automatically derives Serde's Serialize and Deserialize traits for `Poisson`.
 //!    This relies on the [`serde_arrays`][sa] crate to allow (de)serializing the const generic arrays
 //!    used by `Poisson`.
 //!
@@ -96,9 +91,9 @@
 //!
 //! *This version raises the MSRV from 1.51 to 1.67.*
 //!
-//! This version fixes several bugs found in earlier versions, most notably some results not properly
-//! respecting the `radius` parameter, and generating empty results in rare cases. Usage remains the
-//! same as 0.5.x and 0.4.x however.
+//! This version fixes several bugs found in earlier versions, and removes the `small_rng` feature
+//! flag; see [`Poisson`] for details on what to use instead. Usage is otherwise the same as 0.5.x
+//! and 0.4.x.
 //!
 //! Due to internal changes, distributions are expected **not** to match those generated in earlier
 //! versions, even with identical seeds used.
@@ -159,6 +154,9 @@
 //! [small_rng]: https://docs.rs/rand/0.8.3/rand/rngs/struct.SmallRng.html
 //! [sa]: https://crates.io/crates/serde_arrays
 
+use std::marker::PhantomData;
+
+use rand::{Rng, SeedableRng};
 #[cfg(feature = "derive_serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
@@ -175,15 +173,45 @@ pub type Poisson3D = Poisson<3>;
 pub type Poisson4D = Poisson<4>;
 
 #[cfg(not(feature = "single_precision"))]
-type Float = f64;
+pub(crate) mod inner_types {
+    //! Define the internal types used by the crate
+
+    /// The floating-point type
+    pub(crate) type Float = f64;
+    /// The default PRNG
+    pub(crate) type Rand = rand_xoshiro::Xoshiro256StarStar;
+}
 #[cfg(feature = "single_precision")]
-type Float = f32;
+pub(crate) mod inner_types {
+    //! Define the internal types used by the crate
+
+    /// The floating-point type
+    pub(crate) type Float = f32;
+    /// The default PRNG
+    pub(crate) type Rand = rand_xoshiro::Xoshiro128StarStar;
+}
+use inner_types::*;
 
 /// Poisson disk distribution in N dimensions
 ///
 /// Distributions can be generated for any non-negative number of dimensions, although performance
 /// depends upon the volume of the space: for higher-order dimensions you may need to [increase the
 /// radius](Poisson::with_dimensions) to achieve the desired level of performance.
+/// 
+/// If you'd rather use a different PRNG, you can specify the desired one:
+/// ```
+/// use fast_poisson::{Poisson};
+/// use rand_xoshiro::SplitMix64;
+/// 
+/// // This will use the default PRNG, Xoshiro256StarStar
+/// // With the `single_precision` feature, the default is Xoshiro128StarStar
+/// let points = Poisson::<2>::new().generate();
+/// 
+/// // Use SplitMix64 instead of the default PRNG
+/// // This is actually a poor choice, but illustrates the feature
+/// # // More importantly, it avoids adding another dependency
+/// let points = Poisson::<2, SplitMix64>::new().generate();
+/// ```
 ///
 /// # Equality
 ///
@@ -191,9 +219,12 @@ type Float = f32;
 /// even the same object will be different. That is, the equality of two `Poisson`s is based not on
 /// whether or not they were built with the same parameters, but rather on whether or not they will
 /// produce the same results once the distribution is generated.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[cfg_attr(feature = "derive_serde", derive(Serialize, Deserialize))]
-pub struct Poisson<const N: usize> {
+pub struct Poisson<const N: usize, R = Rand>
+where
+    R: Rng + SeedableRng,
+{
     /// Dimensions of the box
     #[cfg_attr(feature = "derive_serde", serde(with = "serde_arrays"))]
     dimensions: [Float; N],
@@ -203,9 +234,14 @@ pub struct Poisson<const N: usize> {
     seed: Option<u64>,
     /// Number of samples to generate and test around each point
     num_samples: u32,
+    /// Marker for our RNG
+    _rng: PhantomData<R>,
 }
 
-impl<const N: usize> Poisson<N> {
+impl<const N: usize, R> Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
     /// Create a new Poisson disk distribution
     ///
     /// By default, `Poisson` will sample each dimension from the semi-open range [0.0, 1.0), using
@@ -292,7 +328,7 @@ impl<const N: usize> Poisson<N> {
     /// }
     /// ```
     #[must_use]
-    pub fn iter(&self) -> Iter<N> {
+    pub fn iter(&self) -> Iter<N, R> {
         Iter::new(self.clone())
     }
 
@@ -369,8 +405,24 @@ impl<const N: usize> Poisson<N> {
     }
 }
 
+/// Note that without a specified seed, a cloned `Poisson` will *not* generate
+/// the same output!
+// We have to specify manually since we don't stipulate `R: Clone` as that's not
+// necessary (we don't actually clone `R`, we don't even *have* `R`!)
+impl<const N: usize, R> Clone for Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
+    fn clone(&self) -> Self {
+        Self { ..*self }
+    }
+}
+
 /// No object is equal, not even to itself, if the seed is unspecified
-impl<const N: usize> PartialEq for Poisson<N> {
+impl<const N: usize, R> PartialEq for Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
     fn eq(&self, other: &Self) -> bool {
         self.seed.is_some()
             && other.seed.is_some()
@@ -381,29 +433,39 @@ impl<const N: usize> PartialEq for Poisson<N> {
     }
 }
 
-impl<const N: usize> Default for Poisson<N> {
+impl<const N: usize, R> Default for Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
     fn default() -> Self {
-        Poisson::<N> {
+        Self {
             dimensions: [1.0; N],
             radius: 0.1,
             seed: None,
             num_samples: 30,
+            _rng: Default::default(),
         }
     }
 }
 
-impl<const N: usize> IntoIterator for Poisson<N> {
+impl<const N: usize, R> IntoIterator for Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
     type Item = Point<N>;
-    type IntoIter = Iter<N>;
+    type IntoIter = Iter<N, R>;
 
     fn into_iter(self) -> Self::IntoIter {
         Iter::new(self)
     }
 }
 
-impl<const N: usize> IntoIterator for &Poisson<N> {
+impl<const N: usize, R> IntoIterator for &Poisson<N, R>
+where
+    R: Rng + SeedableRng,
+{
     type Item = Point<N>;
-    type IntoIter = Iter<N>;
+    type IntoIter = Iter<N, R>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -411,11 +473,12 @@ impl<const N: usize> IntoIterator for &Poisson<N> {
 }
 
 /// For convenience allow converting to a Vec directly from Poisson
-impl<T, const N: usize> From<Poisson<N>> for Vec<T>
+impl<T, const N: usize, R> From<Poisson<N, R>> for Vec<T>
 where
     T: From<[Float; N]>,
+    R: Rng + SeedableRng,
 {
-    fn from(poisson: Poisson<N>) -> Vec<T> {
+    fn from(poisson: Poisson<N, R>) -> Vec<T> {
         poisson.to_vec()
     }
 }
