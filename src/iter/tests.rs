@@ -29,9 +29,8 @@ fn initial_point_not_excluded() {
         let mut iter = Poisson2D::new().with_seed(seed).iter();
         let first_point = iter.active[0];
         let radius = iter.distribution.radius.powi(2); // Square for performance
-        if iter.any(|p| {
-            (p[0] - first_point[0]).powi(2) + (p[1] - first_point[1]).powi(2) < radius
-        }) {
+        if iter.any(|p| (p[0] - first_point[0]).powi(2) + (p[1] - first_point[1]).powi(2) < radius)
+        {
             return;
         }
     }
