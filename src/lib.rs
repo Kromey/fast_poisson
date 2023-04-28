@@ -86,11 +86,11 @@
 //!
 //! # Upgrading
 //!
-//! ## 0.6.x
+//! ## 1.0
 //!
-//! *This version raises the MSRV from 1.51 to 1.67.*
+//! *This release raises the MSRV from 1.51 to 1.67.*
 //!
-//! This version fixes several bugs found in earlier versions, and removes the `small_rng` feature
+//! This release fixes several bugs found in earlier versions, and removes the `small_rng` feature
 //! flag; see [`Poisson`] for details on what to use instead.
 //!
 //! The builder pattern methods have been changed and now directly consume the `Poisson`. This means
@@ -117,58 +117,8 @@
 //! assert_eq!(points, points2);
 //! ```
 //!
-//! Due to internal changes, distributions are expected **not** to match those generated in earlier
-//! versions, even with identical seeds used.
-//!
-//! ## 0.4.x
-//!
-//! This version is 100% backwards-compatible with 0.3.x and 0.2.0, however `fast_poisson` has been
-//! relicensed as of this version.
-//!
-//! Several bugs were identified and fixed in the underlying algorithms; as a result, distributions
-//! generated with 0.4.0 will *not* match those generated in earlier versions.
-//!
-//! ## 0.3.x
-//!
-//! This version adds no breaking changes and is backwards-compatible with 0.2.0.
-//!
-//! ## 0.2.0
-//!
-//! This version adds some breaking changes:
-//!
-//! ### 2 dimensions no longer assumed
-//!
-//! In version 0.1.0 you could directly instantiate `Poisson` and get a 2-dimensional distribution.
-//! Now you must specifiy that you want 2 dimensions using either `Poisson<2>` or [`Poisson2D`].
-//!
-//! ### Returned points are arrays
-//!
-//! In version 0.1.0 the distribution was returned as an iterator over `(f64, f64)` tuples
-//! representing each point. To leverage Rust's new const generics feature and support arbitrary
-//! dimensions, the N-dimensional points are now `[f64; N]` arrays.
-//!
-//! ### Builder pattern
-//!
-//! Use the build pattern to instantiate new distributions. This will not work:
-//! ```compile_fail
-//! # use fast_poisson::Poisson2D;
-//! let poisson = Poisson2D {
-//!     width: 100.0,
-//!     height: 100.0,
-//!     radius: 5.0,
-//!     ..Default::default()
-//! };
-//! let points = poisson.iter();
-//! ```
-//! Instead, leverage the new builder methods:
-//! ```
-//! # use fast_poisson::Poisson2D;
-//! let mut poisson = Poisson2D::new()
-//!     .with_dimensions([100.0; 2], 5.0);
-//! let points = poisson.iter();
-//! ```
-//! This change frees me to make additional changes to how internal state is stored without necessarily
-//! requiring additional changes to the API.
+//! Distributions are **not** expected to match those generated in earlier versions, even with
+//! identical seeds.
 //!
 //! [Bridson]: https://www.cct.lsu.edu/~fharhad/ganbatte/siggraph2007/CD2/content/sketches/0250.pdf
 //! [Tulleken]: http://devmag.org.za/2009/05/03/poisson-disk-sampling/
