@@ -57,7 +57,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         rust:
-        #- 1.51.0 # MSRV - removing for now, need to bump later
+        - 1.59.0 # MSRV
         - stable
         - beta
         features:
@@ -66,25 +66,6 @@ jobs:
         - small_rng
         - "single_precision,small_rng"
         - derive_serde
-        exclude:
-        - os: macOS-latest # MacOS 12 doesn't compile with Rust 1.51
-          rust: 1.51.0
-        # include:
-        # - os: macOS-11
-        #   rust: 1.51.0
-        #   features: default
-        # - os: macOS-11
-        #   rust: 1.51.0
-        #   features: single_precision
-        # - os: macOS-11
-        #   rust: 1.51.0
-        #   features: small_rng
-        # - os: macOS-11
-        #   rust: 1.51.0
-        #   features: "single_precision,small_rng"
-        # - os: macOS-11
-        #   rust: 1.51.0
-        #   features: derive_serde
 
     steps:
     - uses: actions/checkout@v3
