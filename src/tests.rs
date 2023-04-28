@@ -28,6 +28,15 @@ fn builder_pattern() {
 }
 
 #[test]
+fn setting_pattern() {
+    let mut points = Poisson2D::new();
+    points.set_dimensions([10.0, 10.0], 2.0);
+    points.set_seed(0xBADBEEF);
+    points.set_samples(30);
+    points.generate();
+}
+
+#[test]
 fn unseeded_is_non_deterministic() {
     let a = Poisson2D::new().iter();
     let b = Poisson2D::new().iter();
@@ -48,13 +57,11 @@ fn iter() {
     for _point in poisson.iter() {}
 
     // 4-dimensional distribution
-    let mut poisson = Poisson4D::new();
-    poisson.with_dimensions([1.0; 4], 0.2);
+    let poisson = Poisson4D::new().with_dimensions([1.0; 4], 0.2);
     for _point in poisson.iter() {}
 
     // For more than 4 dimensions, use `Poisson` directly:
-    let mut poisson = Poisson::<7>::new();
-    poisson.with_dimensions([1.0; 7], 0.7);
+    let poisson = Poisson::<7>::new().with_dimensions([1.0; 7], 0.7);
     for _point in poisson.iter() {}
 }
 
@@ -97,15 +104,15 @@ fn poisson_equality() {
     // No seed has been specified, so these are not equal
     assert_ne!(poisson, poisson2);
 
-    poisson.with_seed(1337);
-    poisson2.with_seed(1337);
+    poisson.set_seed(1337);
+    poisson2.set_seed(1337);
 
     // Now with same seed, these are equal
     assert_eq!(poisson, poisson);
     assert_eq!(poisson2, poisson2);
     assert_eq!(poisson, poisson2);
 
-    poisson2.with_dimensions([2.0, 3.0], 0.5);
+    poisson2.set_dimensions([2.0, 3.0], 0.5);
 
     // Different dimension, unequal again
     assert_ne!(poisson, poisson2);

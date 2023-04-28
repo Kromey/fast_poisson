@@ -76,12 +76,11 @@
 //! let mut points_4d = Poisson4D::new();
 //! // To achieve desired levels of performance, you should set a larger radius for higher-order
 //! // distributions
-//! points_4d.with_dimensions([1.0; 4], 0.2);
+//! points_4d.set_dimensions([1.0; 4], 0.2);
 //! let points_4d = points_4d.iter();
 //!
 //! // For more than 4 dimensions, use `Poisson` directly:
-//! let mut points_7d = Poisson::<7>::new();
-//! points_7d.with_dimensions([1.0; 7], 0.6);
+//! let mut points_7d = Poisson::<7>::new().with_dimensions([1.0; 7], 0.6);
 //! let points_7d = points_7d.iter();
 //! ```
 //!
@@ -141,8 +140,8 @@
 //! Instead, leverage the new builder methods:
 //! ```
 //! # use fast_poisson::Poisson2D;
-//! let mut poisson = Poisson2D::new();
-//! poisson.with_dimensions([100.0; 2], 5.0);
+//! let mut poisson = Poisson2D::new()
+//!     .with_dimensions([100.0; 2], 5.0);
 //! let points = poisson.iter();
 //! ```
 //! This change frees me to make additional changes to how internal state is stored without necessarily
@@ -197,16 +196,16 @@ use inner_types::*;
 /// Distributions can be generated for any non-negative number of dimensions, although performance
 /// depends upon the volume of the space: for higher-order dimensions you may need to [increase the
 /// radius](Poisson::with_dimensions) to achieve the desired level of performance.
-/// 
+///
 /// If you'd rather use a different PRNG, you can specify the desired one:
 /// ```
 /// use fast_poisson::{Poisson};
 /// use rand_xoshiro::SplitMix64;
-/// 
+///
 /// // This will use the default PRNG, Xoshiro256StarStar
 /// // With the `single_precision` feature, the default is Xoshiro128StarStar
 /// let points = Poisson::<2>::new().generate();
-/// 
+///
 /// // Use SplitMix64 instead of the default PRNG
 /// // This is actually a poor choice, but illustrates the feature
 /// # // More importantly, it avoids adding another dependency
@@ -247,10 +246,6 @@ where
     /// By default, `Poisson` will sample each dimension from the semi-open range [0.0, 1.0), using
     /// a radius of 0.1 around each point, and up to 30 random samples around each; the resulting
     /// output will be non-deterministic, meaning it will be different each time.
-    ///
-    /// See [`Poisson::with_dimensions`] to change the range and radius, [`Poisson::with_samples`]
-    /// to change the number of random samples for each point, and [`Poisson::with_seed`] to produce
-    /// repeatable results.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -277,9 +272,11 @@ where
     ///     && p[2] >= 0.0 && p[2] < 5.0
     /// }));
     /// ```
-    pub fn with_dimensions(&mut self, dimensions: [Float; N], radius: Float) -> &mut Self {
-        self.dimensions = dimensions;
-        self.radius = radius;
+    ///
+    /// See also [`set_dimensions`][Self::set_dimensions].
+    #[must_use]
+    pub fn with_dimensions(mut self, dimensions: [Float; N], radius: Float) -> Self {
+        self.set_dimensions(dimensions, radius);
 
         self
     }
@@ -293,8 +290,11 @@ where
     /// # use fast_poisson::Poisson2D;
     /// let points = Poisson2D::new().with_seed(0xBADBEEF).iter();
     /// ```
-    pub fn with_seed(&mut self, seed: u64) -> &mut Self {
-        self.seed = Some(seed);
+    ///
+    /// See also [`set_seed`][Self::set_seed].
+    #[must_use]
+    pub fn with_seed(mut self, seed: u64) -> Self {
+        self.set_seed(seed);
 
         self
     }
@@ -311,10 +311,61 @@ where
     /// # use fast_poisson::Poisson3D;
     /// let points = Poisson3D::new().with_samples(40).iter();
     /// ```
-    pub fn with_samples(&mut self, samples: u32) -> &mut Self {
-        self.num_samples = samples;
+    ///
+    /// See also [`set_samples`][Self::set_samples].
+    #[must_use]
+    pub fn with_samples(mut self, samples: u32) -> Self {
+        self.set_samples(samples);
 
         self
+    }
+
+    /// Specify the space to be filled and the radius around each point
+    ///
+    /// To generate a 2-dimensional distribution in a 5×5 square, with no points closer than 1:
+    /// ```
+    /// # use fast_poisson::Poisson2D;
+    /// let mut points = Poisson2D::new();
+    /// points.set_dimensions([5.0, 5.0], 1.0);
+    ///
+    /// assert!(points.iter().all(|p| p[0] >= 0.0 && p[0] < 5.0 && p[1] >= 0.0 && p[1] < 5.0));
+    /// ```
+    ///
+    /// For more see [`with_dimensions`][Self::with_dimensions].
+    pub fn set_dimensions(&mut self, dimensions: [Float; N], radius: Float) {
+        self.dimensions = dimensions;
+        self.radius = radius;
+    }
+
+    /// Specify the PRNG seed for this distribution
+    ///
+    /// If no seed is specified then the internal PRNG will be seeded from entropy, providing
+    /// non-deterministic and non-repeatable results.
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson2D;
+    /// let mut points = Poisson2D::new();
+    /// points.set_seed(0xBADBEEF);
+    /// # let points = points.generate();
+    /// ```
+    ///
+    /// See also [`with_seed`][Self::with_seed].
+    pub fn set_seed(&mut self, seed: u64) {
+        self.seed = Some(seed);
+    }
+
+    /// Specify the maximum samples to generate around each point
+    ///
+    /// ```
+    /// # use fast_poisson::Poisson3D;
+    /// let mut points = Poisson3D::new();
+    /// points.set_samples(40);
+    /// # let points = points.generate();
+    /// ```
+    ///
+    /// See [`with_samples`][Self::with_samples] for more details.
+    pub fn set_samples(&mut self, samples: u32) {
+        self.num_samples = samples;
     }
 
     /// Returns an iterator over the points in this distribution
@@ -336,7 +387,7 @@ where
     ///
     /// Note that this method does *not* consume the `Poisson`, so you can call it multiple times
     /// to generate multiple `Vec`s; if you have specified a seed, each one will be identical,
-    /// whereas they will each be unique if you have not (see [`Poisson::with_seed`]).
+    /// whereas they will each be unique if you have not (see [`Poisson::set_seed`]).
     ///
     /// ```
     /// # use fast_poisson::Poisson2D;
@@ -348,7 +399,7 @@ where
     /// // These are not identical because no seed was specified
     /// assert!(points1.iter().zip(points2.iter()).any(|(a, b)| a != b));
     ///
-    /// poisson.with_seed(1337);
+    /// poisson.set_seed(1337);
     ///
     /// let points3 = poisson.generate();
     /// let points4 = poisson.generate();
