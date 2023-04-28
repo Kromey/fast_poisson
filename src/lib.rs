@@ -92,7 +92,7 @@
 //!
 //! This version fixes several bugs found in earlier versions, and removes the `small_rng` feature
 //! flag; see [`Poisson`] for details on what to use instead.
-//! 
+//!
 //! The builder pattern methods have been changed and now directly consume the `Poisson`. This means
 //! that this will no longer work:
 //! ```compile_fail
@@ -108,12 +108,12 @@
 //! // Builder pattern
 //! let builder = Poisson2D::new().with_seed(0xCAFEF00D);
 //! let points = builder.generate();
-//! 
+//!
 //! // New `set_*` methods
 //! let mut setters = Poisson2D::new();
 //! setters.set_seed(0xCAFEF00D);
 //! let points2 = setters.generate();
-//! 
+//!
 //! assert_eq!(points, points2);
 //! ```
 //!
