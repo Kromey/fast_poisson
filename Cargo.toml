@@ -29,6 +29,7 @@ derive_serde = ["serde", "serde_arrays"]
 [dev-dependencies]
 serde_json = "1.0"
 criterion = "0.4"
+rayon = "1.7.0"
 
 [[bench]]
 name = "point_generation"
