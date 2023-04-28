@@ -1,6 +1,11 @@
 use fast_poisson::Poisson2D;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
+#[cfg(not(feature = "single_precision"))]
+type Float = f64;
+#[cfg(feature = "single_precision")]
+type Float = f32;
+
 /// Ensure points remain at minimum radius apart
 ///
 /// Ref #33
@@ -47,6 +52,6 @@ fn closeness_thorough() {
     });
 }
 
-fn distance(p1: [f64; 2], p2: [f64; 2]) -> f64 {
+fn distance(p1: [Float; 2], p2: [Float; 2]) -> Float {
     ((p1[0] - p2[0]).powi(2) + (p1[1] - p2[1]).powi(2)).sqrt()
 }
