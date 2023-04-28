@@ -46,7 +46,10 @@ impl<const N: usize> Iter<N> {
         // We have to generate an initial point, just to ensure we've got *something* in the active list
         let mut first_point = [0.0; N];
         for (i, dim) in first_point.iter_mut().zip(distribution.dimensions.iter()) {
-            *i = rng.gen::<Float>() * dim;
+            // Start somewhere near the middle, but still randomly distributed
+            // Fixes #34 by avoiding cases where we start near an edge/corner and happen to only generate
+            // samples outside of our boundaries (because we only have ~25% chance of picking one inside)
+            *i = (1.5 - rng.gen::<Float>()) * dim / 2.0;
         }
 
         let mut iter = Iter {
