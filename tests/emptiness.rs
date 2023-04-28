@@ -11,9 +11,13 @@ fn emptiness() {
             .with_dimensions([30.0, 20.0], 5.0)
             .with_seed(seed)
             .generate();
-    
+
         // Verify we actually have points
-        assert!(!points.is_empty(), "Seed {} produced an empty set of points", seed);
+        assert!(
+            !points.is_empty(),
+            "Seed {} produced an empty set of points",
+            seed
+        );
     }
 }
 
@@ -28,8 +32,12 @@ fn emptiness_thorough() {
             .with_dimensions([30.0, 20.0], 5.0)
             .with_seed(seed)
             .generate();
-    
-            // Verify we actually have points
-            assert!(!points.is_empty(), "Seed {} produced an empty set of points", seed);
+
+        // Verify we actually have points
+        assert!(
+            !points.is_empty(),
+            "Seed {} produced an empty set of points",
+            seed
+        );
     });
 }

@@ -6,7 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use super::{Float, Poisson};
-use kiddo::{KdTree, float::distance::squared_euclidean};
+use kiddo::{float::distance::squared_euclidean, KdTree};
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use std::iter::FusedIterator;
@@ -112,7 +112,10 @@ impl<const N: usize> Iter<N> {
 
     /// Returns true if there is at least one other sample point within `radius` of this point
     fn in_neighborhood(&self, point: Point<N>) -> bool {
-        !self.sampled.within(&point, self.distribution.radius.powi(2), &squared_euclidean).is_empty()
+        !self
+            .sampled
+            .within(&point, self.distribution.radius.powi(2), &squared_euclidean)
+            .is_empty()
     }
 }
 

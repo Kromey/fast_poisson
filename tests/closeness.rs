@@ -16,7 +16,7 @@ fn closeness() {
     // Test every point against every other point
     for i in 0..(points.len() - 1) {
         // Only need to test points later in the list, since we've already tested i against earlier points
-        for j in (i+1)..points.len() {
+        for j in (i + 1)..points.len() {
             assert!(5.0 <= distance(points[i], points[j]));
         }
     }
@@ -39,7 +39,7 @@ fn closeness_thorough() {
             // Test every point against every other point
             for i in 0..(points.len() - 1) {
                 // Only need to test points later in the list, since we've already tested i against earlier points
-                for j in (i+1)..points.len() {
+                for j in (i + 1)..points.len() {
                     assert!(5.0 <= distance(points[i], points[j]));
                 }
             }
