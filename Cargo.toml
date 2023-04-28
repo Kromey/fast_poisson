@@ -1,6 +1,6 @@
 [package]
 name = "fast_poisson"
-version = "0.6.0"
+version = "1.0.0"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
 rust-version = "1.67"
 edition = "2021"
