@@ -13,9 +13,6 @@ item placement.
 
 ## Usage
 
-`fast_poisson` requires Rust 1.51.0 or later, as it relies on the const generics feature introduced
-in this version.
-
 A simple example to generate a `Vec` containing a 2D Poisson distribution within [0, 1) in each
 dimension:
 
@@ -28,6 +25,10 @@ fn main() {
 ```
 
 See [the documentation](https://docs.rs/fast_poisson/) for more.
+
+## MSRV
+
+`fast_poisson` is tested and supported for Rust version 1.59 or later.
 
 ## License
 

@@ -34,12 +34,6 @@
 //!    This relies on the [`serde_arrays`][sa] crate to allow (de)serializing the const generic arrays
 //!    used by `Poisson`.
 //!
-//! # Requirements
-//!
-//! This library requires Rust 1.51.0 or later, as it relies on [const generics] to return
-//! fixed-length points (e.g. [x, y] or [x, y, z]) without adding additional external dependencies
-//! to your code.
-//!
 //! # Examples
 //!
 //! ```
@@ -97,6 +91,17 @@
 //! ```
 //!
 //! # Upgrading
+//!
+//! ## 0.6.x
+//!
+//! *This version raises the MSRV from 1.51 to 1.59.*
+//!
+//! This version fixes several bugs found in earlier versions, most notably some results not properly
+//! respecting the `radius` parameter, and generating empty results in rare cases. Usage remains the
+//! same as 0.5.x and 0.4.x however.
+//!
+//! Due to internal changes, distributions are expected **not** to match those generated in earlier
+//! versions, even with identical seeds used.
 //!
 //! ## 0.4.x
 //!
