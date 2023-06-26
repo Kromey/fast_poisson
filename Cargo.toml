@@ -20,8 +20,10 @@ rand_xoshiro = "0.6.0"
 rand_distr = "0.4.0"
 serde = { version = "1.0", package = "serde", features = ["derive"], optional = true }
 serde_arrays = { version = "0.1.0", optional = true }
+
+[patch.crates-io]
 # Fix for half breaking SemVer with breaking changes in minor versions
-half = "<2.3.0"
+half = { git = "https://github.com/starkat99/half-rs", tag = "v2.2.1" }
 
 [features]
 default = [] # Provide an "empty" default feature for CI
