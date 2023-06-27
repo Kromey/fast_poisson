@@ -24,12 +24,13 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
+          Cargo.lock
         key: ${{ runner.os }}-stable-cargo-${{ hashFiles('**/Cargo.toml') }}
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
     - run: cargo fmt --all -- --check
-  
+
   clippy:
     name: Clippy lints
     runs-on: ubuntu-latest
@@ -47,7 +48,7 @@ jobs:
       with:
         components: clippy
     - run: cargo clippy --all
-  
+
   test:
     name: Tests
     needs: [rustfmt, clippy]
@@ -78,6 +79,9 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ matrix.rust }}
+    - name: Ensure compatible half version
+      run: cargo update -p half@2.3.1 --precise 2.2.1
+      if: matrix.rust == '1.67.0'
     - name: Build
       run: cargo build --verbose --features "${{ matrix.features }}"
     - name: Run tests
