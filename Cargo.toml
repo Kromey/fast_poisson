@@ -1,6 +1,6 @@
 [package]
 name = "fast_poisson"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Travis Veazey <travisvz@gmail.com>"]
 rust-version = "1.67"
 edition = "2021"
@@ -14,7 +14,7 @@ exclude = ["/.github/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kiddo = "5.0.3" # "2.1.2"
+kiddo = "5.0.3"
 rand = "0.9.0"
 rand_xoshiro = "0.7.0"
 rand_distr = "0.5.0"
