@@ -14,10 +14,10 @@ exclude = ["/.github/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kiddo = "2.0.1"
-rand = "0.8.4"
-rand_xoshiro = "0.6.0"
-rand_distr = "0.4.0"
+kiddo = "5.0.3" # "2.1.2"
+rand = "0.9.0"
+rand_xoshiro = "0.7.0"
+rand_distr = "0.5.0"
 serde = { version = "1.0", package = "serde", features = ["derive"], optional = true }
 serde_arrays = { version = "0.1.0", optional = true }
 
@@ -28,8 +28,8 @@ derive_serde = ["serde", "serde_arrays"]
 
 [dev-dependencies]
 serde_json = "1.0"
-criterion = "0.4"
-rayon = "1.7.0"
+criterion = "0.5"
+rayon = "1.10"
 
 [[bench]]
 name = "point_generation"
