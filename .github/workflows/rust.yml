@@ -79,7 +79,9 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
     - name: Ensure compatible half version
-      run: cargo update -p half --precise 2.2.1
+      run: |
+        cargo update -p half --precise 2.2.1
+        cargo update -p fixed --precise 1.23.1
       if: matrix.rust == '1.67.0'
     - name: Build
       run: cargo build --verbose --features "${{ matrix.features }}"
