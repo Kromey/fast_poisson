@@ -64,6 +64,11 @@ jobs:
         - default
         - single_precision
         - derive_serde
+        exclude: # Just test the MSRV on Ubuntu, not likely to have OS issues
+        - os: macOS-latest
+          rust: 1.67.0
+        - os: windows-latest
+          rust: 1.67.0
 
     steps:
     - uses: actions/checkout@v3
@@ -81,7 +86,9 @@ jobs:
     - name: Ensure compatible half version
       run: |
         cargo update -p half --precise 2.2.1
+        cargo update -p kiddo --precise 2.1.1
         cargo update -p fixed --precise 1.23.1
+        cargo update -p textwrap --precise 0.16.0
       if: matrix.rust == '1.67.0'
     - name: Build
       run: cargo build --verbose --features "${{ matrix.features }}"
