@@ -8,7 +8,7 @@
 use crate::Rand;
 
 use super::{Float, Poisson};
-use kiddo::{float::distance::squared_euclidean, KdTree};
+use kiddo::{KdTree, float::distance::SquaredEuclidean};
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use std::iter::FusedIterator;
@@ -42,7 +42,7 @@ where
     pub(crate) fn new(distribution: Poisson<N, R>) -> Self {
         // If we were not given a seed, generate one non-deterministically
         let mut rng = match distribution.seed {
-            None => R::from_entropy(),
+            None => R::from_os_rng(),
             Some(seed) => R::seed_from_u64(seed),
         };
 
@@ -52,7 +52,7 @@ where
             // Start somewhere near the middle, but still randomly distributed
             // Fixes #34 by avoiding cases where we start near an edge/corner and happen to only generate
             // samples outside of our boundaries (because we only have ~25% chance of picking one inside)
-            *i = (1.5 - rng.gen::<Float>()) * dim / 2.0;
+            *i = (1.5 - rng.random::<Float>()) * dim / 2.0;
         }
 
         Iter {
@@ -78,7 +78,7 @@ where
     /// Generate a random point between `radius` and `2 * radius` away from the given point
     fn generate_random_point(&mut self, around: Point<N>) -> Point<N> {
         // Pick a random distance away from our point
-        let dist = self.distribution.radius * (1.0 + self.rng.gen::<Float>());
+        let dist = self.distribution.radius * (1.0 + self.rng.random::<Float>());
 
         // Generate a randomly distributed vector
         let mut vector: [Float; N] = [0.0; N];
@@ -116,7 +116,7 @@ where
     fn in_neighborhood(&self, point: Point<N>) -> bool {
         !self
             .sampled
-            .within(&point, self.distribution.radius.powi(2), &squared_euclidean)
+            .within::<SquaredEuclidean>(&point, self.distribution.radius.powi(2))
             .is_empty()
     }
 }
@@ -129,7 +129,7 @@ where
 
     fn next(&mut self) -> Option<Point<N>> {
         while !self.active.is_empty() {
-            let i = self.rng.gen_range(0..self.active.len());
+            let i = self.rng.random_range(0..self.active.len());
 
             for _ in 0..self.distribution.num_samples {
                 // Generate up to `num_samples` random points between radius and 2*radius from the current point

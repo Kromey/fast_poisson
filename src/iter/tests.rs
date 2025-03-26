@@ -5,6 +5,7 @@
 // https://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use rand_distr::num_traits::ToPrimitive;
 use super::*;
 use crate::{Poisson2D, Poisson3D};
 
@@ -17,9 +18,10 @@ fn adding_points() {
 
     assert!(iter.active.contains(&point));
 
+    let nearest = iter.sampled.nearest_one::<SquaredEuclidean>(&point);
     assert_eq!(
-        iter.sampled.nearest_one(&point, &squared_euclidean),
-        (0.0, 0)
+        (nearest.distance.to_f32().unwrap(), nearest.item),
+        (0.0f32, 0u64)
     );
 }
 
