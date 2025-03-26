@@ -5,9 +5,9 @@
 // https://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use rand_distr::num_traits::ToPrimitive;
 use super::*;
 use crate::{Poisson2D, Poisson3D};
+use rand_distr::num_traits::ToPrimitive;
 
 #[test]
 fn adding_points() {

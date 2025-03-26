@@ -8,7 +8,7 @@
 use crate::Rand;
 
 use super::{Float, Poisson};
-use kiddo::{KdTree, float::distance::SquaredEuclidean};
+use kiddo::{float::distance::SquaredEuclidean, KdTree};
 use rand::prelude::*;
 use rand_distr::StandardNormal;
 use std::iter::FusedIterator;
