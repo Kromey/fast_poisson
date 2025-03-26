@@ -86,6 +86,10 @@
 //!
 //! # Upgrading
 //!
+//! ## 1.0.2
+//!
+//! As of this release we no longer guarantee an MSRV beyond the current stable and beta.
+//!
 //! ## 1.0
 //!
 //! *This release raises the MSRV from 1.51 to 1.67.*
